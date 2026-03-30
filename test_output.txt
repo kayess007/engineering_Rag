@@ -1,0 +1,38 @@
+Importing parser...
+Parser imported OK
+Parsing complete. Total elements: 10403
+Titles: 965
+Tables: 109
+NarrativeText: 9329
+
+Sample titles:
+  [2] p1: Maintenance Manual
+  [3] p1: DI450-DI560 TIER4
+  [1] p1: LEOPARD
+  [3] p3: Maintenance Manual
+  [3] p3: DI450-DI560 TIER4
+  [2] p3: WARNING
+  [3] p3: IGNORING INSTRUCTIONS HAZARD!
+  [3] p3: To avoid death or injury you MUST read, understand and
+  [3] p3: follow operator's and maintenance manuals before
+  [3] p3: installing, inspecting, operating, servicing, testing,
+  [3] p3: cleaning, transporting, storing, dismantling or disposing
+  [3] p3: of the product or a part or accessory of the product. Keep
+  [3] p3: this publication for future reference.
+  [3] p4: Maintenance Manual
+  [3] p4: DI450-DI560 TIER4
+  [3] p4: This page is intentionally left blank
+  [3] p5: Maintenance Manual
+  [3] p5: DI450-DI560 TIER4
+  [3] p5: Table of Contents
+  [3] p5: 1
+  [3] p5: Introduction .........................................................
+  [3] p5: 2
+  [3] p5: Safety and environmental instructions .......................23
+  [3] p6: Maintenance Manual
+  [3] p6: DI450-DI560 TIER4
+  [3] p6: 3
+  [3] p6: Machine description ..................................................
+  [3] p7: Maintenance Manual
+  [3] p7: DI450-DI560 TIER4
+  [3] p7: 4
