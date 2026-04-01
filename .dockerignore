@@ -1,0 +1,11 @@
+storage/
+evaluation/results/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.env
+.git/
+.venv/
+venv/
+*.egg-info/

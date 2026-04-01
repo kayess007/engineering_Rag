@@ -6,22 +6,31 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from app.auth import login, require_auth
 from app.chunker import chunk_parsed_document, load_parsed_json, save_chunked_json
+from app.logging_config import setup_logging
+from app.middleware import RequestLoggingMiddleware
 from app.parser import parse_pdf_to_elements
 from app.rag_chain import generate_rag_answer
-from app.retriever import retrieve_chunks
+from app.retriever import retrieve_chunks, retrieve_chunks_advanced
 from app.schemas import ParsedDocument
 from app.utils import save_parsed_json, save_upload_file, UPLOAD_DIR, PARSED_DIR
 from app.vectordb import index_chunks, get_vectorstore
 
+setup_logging()
+
 CHUNKED_DIR = Path("storage/chunked")
 
 
-app = FastAPI(title="Engineering RAG - Phase 5")
+app = FastAPI(title="Engineering RAG - Phase 10")
+app.add_middleware(RequestLoggingMiddleware)
+
+# ── Auth route ────────────────────────────────────────────────────────────────
+app.post("/auth/token")(login)
 
 
 class ChunkRequest(BaseModel):
@@ -75,8 +84,47 @@ def list_manuals():
     return {"manuals": manuals, "count": len(manuals)}
 
 
+@app.delete("/manuals/{manual_id}")
+def delete_manual(manual_id: str, collection_name: str = "engineering_manuals", _user: str = Depends(require_auth)):
+    try:
+        deleted = {}
+
+        # Remove from ChromaDB
+        try:
+            vectorstore = get_vectorstore(collection_name=collection_name)
+            vectorstore._collection.delete(where={"manual_id": manual_id})
+            deleted["vectordb"] = True
+        except Exception as e:
+            deleted["vectordb"] = f"skipped: {e}"
+
+        # Remove parsed JSON
+        parsed_path = PARSED_DIR / f"{manual_id}.json"
+        if parsed_path.exists():
+            parsed_path.unlink()
+            deleted["parsed_json"] = True
+
+        # Remove chunked JSON
+        chunked_path = CHUNKED_DIR / f"{manual_id}_chunks.json"
+        if chunked_path.exists():
+            chunked_path.unlink()
+            deleted["chunked_json"] = True
+
+        # Remove uploaded PDF (find by manual_id in parsed metadata)
+        for upload in UPLOAD_DIR.glob("*.pdf"):
+            deleted["uploaded_pdf"] = "not found"
+        # best effort — find the filename from the parsed file (already deleted above)
+        # so we rely on the caller knowing the filename or skip pdf deletion
+        deleted["note"] = "PDF in uploads/ not deleted — remove manually if needed"
+
+        return {"manual_id": manual_id, "deleted": deleted}
+
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
+
+
 @app.post("/manuals/upload")
-async def upload_manual(file: UploadFile = File(...)):
+async def upload_manual(file: UploadFile = File(...), _user: str = Depends(require_auth)):
     if not file.filename:
         raise HTTPException(status_code=400, detail="File must have a filename.")
 
@@ -136,7 +184,7 @@ async def upload_manual(file: UploadFile = File(...)):
 
 
 @app.post("/manuals/chunk")
-def chunk_manual(req: ChunkRequest):
+def chunk_manual(req: ChunkRequest, _user: str = Depends(require_auth)):
     try:
         print(f"Loading parsed file: {req.parsed_file_path}")
         parsed_doc = load_parsed_json(req.parsed_file_path)
@@ -163,7 +211,7 @@ def chunk_manual(req: ChunkRequest):
 
 
 @app.post("/manuals/index")
-def index_manual(req: IndexRequest):
+def index_manual(req: IndexRequest, _user: str = Depends(require_auth)):
     try:
         print(f"Indexing chunked file: {req.chunked_file_path}")
         doc_count = index_chunks(req.chunked_file_path, collection_name=req.collection_name)
@@ -205,6 +253,54 @@ def query_manuals(req: QueryRequest):
         print("FULL ERROR TRACEBACK:")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")
+
+
+class AskAdvancedRequest(BaseModel):
+    question: str
+    collection_name: str = "engineering_manuals"
+    k: int = 5
+    model: str = "gpt-4.1-mini"
+    rewrite_model: str = "gpt-4.1-mini"
+
+
+@app.post("/ask/advanced")
+def ask_manuals_advanced(req: AskAdvancedRequest):
+    """Phase 9: query rewriting + cross-encoder reranking before answer generation."""
+    try:
+        print(f"Advanced ask received: {req.question}")
+
+        retrieved = retrieve_chunks_advanced(
+            query=req.question,
+            collection_name=req.collection_name,
+            k=req.k,
+            rewrite_model=req.rewrite_model,
+        )
+
+        rag_result = generate_rag_answer(
+            question=req.question,
+            retrieved_chunks=retrieved,
+            model=req.model,
+        )
+
+        return {
+            "question": req.question,
+            "collection_name": req.collection_name,
+            "result_count": len(retrieved),
+            "answer": rag_result["answer"],
+            "sources": [
+                {
+                    "source_file": r["metadata"].get("source_file"),
+                    "section_title": r["metadata"].get("section_title"),
+                    "page_start": r["metadata"].get("page_start"),
+                    "page_end": r["metadata"].get("page_end"),
+                }
+                for r in retrieved
+            ],
+        }
+
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Advanced ask failed: {str(e)}")
 
 
 @app.post("/ask")

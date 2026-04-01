@@ -187,6 +187,48 @@ def deduplicate_results(results: List[Dict], max_results: int) -> List[Dict]:
     return deduped
 
 
+def retrieve_chunks_advanced(
+    query: str,
+    collection_name: str,
+    k: int = 5,
+    rewrite_model: str = "gpt-4.1-mini",
+) -> List[Dict]:
+    """
+    Phase 9 enhanced retrieval:
+      1. Rewrite query into multiple variants
+      2. Run hybrid retrieval for each variant (wider net)
+      3. Merge + deduplicate candidates
+      4. Cross-encoder rerank → return top-k
+    """
+    from app.query_rewriter import rewrite_query
+    from app.reranker import rerank
+
+    queries = rewrite_query(query, model=rewrite_model)
+    print(f"[advanced] Query variants: {queries}")
+
+    # Collect candidates from all query variants (larger pool)
+    candidate_pool: List[Dict] = []
+    fetch_k = max(k * 4, 20)
+
+    for q in queries:
+        vec = vector_search(q, collection_name=collection_name, k=fetch_k)
+        kw = keyword_search(q, k=fetch_k)
+        merged = vec + kw
+        ranked = sorted(merged, key=lambda item: score_result(q, item), reverse=True)
+        candidate_pool.extend(ranked[:fetch_k])
+
+    # Deduplicate across all variants
+    deduped = deduplicate_results(candidate_pool, max_results=min(len(candidate_pool), k * 8))
+
+    # Strip internal scoring key before passing to cross-encoder
+    for item in deduped:
+        item.pop("_vector_similarity", None)
+
+    # Cross-encoder rerank using original query
+    reranked = rerank(query, deduped, top_k=k)
+    return reranked
+
+
 def retrieve_chunks(query: str, collection_name: str, k: int = 10) -> List[Dict]:
     # 1. Semantic retrieval (with similarity scores for reranking)
     vector_results = vector_search(query, collection_name=collection_name, k=k)

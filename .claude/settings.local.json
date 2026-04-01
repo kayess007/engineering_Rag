@@ -3,7 +3,10 @@
     "allow": [
       "Bash(python -c \"import fitz; print\\(''pymupdf:'', fitz.__version__\\)\")",
       "Bash(python -c \"import pdfplumber; print\\(''pdfplumber: ok''\\)\")",
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Bash(powershell -Command \"cd ''c:\\\\Users\\\\kbaah\\\\Desktop\\\\engineering_RAG''; python -c \"\"from ragas.metrics.collections import Faithfulness, AnswerRelevancy, ContextPrecision, ContextRecall; from ragas.llms import llm_factory; from openai import OpenAI; import os; from dotenv import load_dotenv; load_dotenv\\(\\); client = OpenAI\\(api_key=os.getenv\\(''OPENAI_API_KEY''\\)\\); llm = llm_factory\\(''gpt-4.1-mini'', client=client\\); f = Faithfulness\\(llm=llm\\); print\\(type\\(f\\), ''OK''\\)\"\" 2>&1\")",
+      "Bash(powershell -Command \"cd ''c:\\\\Users\\\\kbaah\\\\Desktop\\\\engineering_RAG''; python -c \"\"from ragas.embeddings import OpenAIEmbeddings; from openai import OpenAI; import os; from dotenv import load_dotenv; load_dotenv\\(\\); client = OpenAI\\(api_key=os.getenv\\(''OPENAI_API_KEY''\\)\\); emb = OpenAIEmbeddings\\(model=''text-embedding-3-small'', client=client\\); print\\(type\\(emb\\), ''OK''\\)\"\" 2>&1\")",
+      "Bash(powershell -Command \"python -c \"\"import inspect, ragas.evaluation; print\\(inspect.getsource\\(ragas.evaluation.aevaluate\\)\\)\"\" 2>&1 | Select-String -Pattern ''initialised|isinstance|type|Metric'' | Select-Object -First 20\")"
     ]
   }
 }

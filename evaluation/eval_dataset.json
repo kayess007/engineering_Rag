@@ -1,0 +1,77 @@
+[
+  {
+    "question": "What is the recommended hydraulic oil viscosity at operating temperature?",
+    "ground_truth": "The viscosity of hydraulic oils at operating temperature should be close to 60 cSt, and any variation in continuous use should remain within the range 50-110 cSt.",
+    "source_file": "maintenance.pdf"
+  },
+  {
+    "question": "What is the tightening torque for the hydraulic oil receiver cover mounting screws?",
+    "ground_truth": "The tightening torque for the cover mounting screws is 25 Nm. Sealing compound such as Loctite 5923 or equivalent should be applied on both sides of the rubber seal.",
+    "source_file": "maintenance.pdf"
+  },
+  {
+    "question": "What hydraulic oil cleanliness class is required?",
+    "ground_truth": "The maximum permissible degree of contamination of the hydraulic fluid is cleanliness class 20/15/12 according to ISO 4406.",
+    "source_file": "maintenance.pdf"
+  },
+  {
+    "question": "What are the biodegradable hydraulic oil recommendations?",
+    "ground_truth": "For biodegradable hydraulic oils, Sandvik factory fill oils are Shell Naturelle HFE 46 or HFE 68 (synthetic ester). The recommended water content is less than 300 ppm. Oils must meet ISO 15380 standard.",
+    "source_file": "maintenance.pdf"
+  },
+  {
+    "question": "What is the oil change interval for the hydraulic system?",
+    "ground_truth": "The hydraulic oil should be changed once a year unless heavy use requires more frequent changes. This interval is based on oil aging and moisture accumulation over a one-year period.",
+    "source_file": "maintenance.pdf"
+  },
+  {
+    "question": "What is the engine oil change interval for normal service?",
+    "ground_truth": "For normal service using Cat DEO-ULS or oils meeting Cat ECF-3 or API CJ-4 with a minimum TBN of 8, the oil change interval is every 500 hours.",
+    "source_file": "OM SEBU9105-02.pdf"
+  },
+  {
+    "question": "What is the engine oil change interval for severe service?",
+    "ground_truth": "For severe service, the oil change interval is every 250 hours when using Cat DEO-ULS or oils meeting Cat ECF-3 or API CJ-4 specifications.",
+    "source_file": "OM SEBU9105-02.pdf"
+  },
+  {
+    "question": "What type of coolant is recommended for the engine?",
+    "ground_truth": "Cat ELC (Extended Life Coolant) or a coolant meeting the Cat EC-1 specification is recommended. The coolant change interval is 6000 hours or 6 years for ELC.",
+    "source_file": "OM SEBU9105-02.pdf"
+  },
+  {
+    "question": "What is the air filter service interval?",
+    "ground_truth": "The air filter should be inspected and serviced when the air filter indicator shows a restriction, or at every 500 hour maintenance interval, whichever comes first.",
+    "source_file": "OM SEBU9105-02.pdf"
+  },
+  {
+    "question": "What fuel filter replacement interval is recommended?",
+    "ground_truth": "Fuel filters should be replaced every 500 hours as part of the scheduled maintenance procedure.",
+    "source_file": "maintenance.pdf"
+  },
+  {
+    "question": "What compressor oil change interval is recommended?",
+    "ground_truth": "The compressor oil change interval depends on the oil type and operating conditions. Refer to the compressor oil recommendation for the specific interval.",
+    "source_file": "maintenance.pdf"
+  },
+  {
+    "question": "What is the recommended oil for tramming gears?",
+    "ground_truth": "The oil in tramming gears should be changed every 1000 hours.",
+    "source_file": "maintenance.pdf"
+  },
+  {
+    "question": "What safety precaution must be taken before working on the hydraulic system?",
+    "ground_truth": "Contact with hot oil in hydraulic systems could cause death or severe injury. The oil must be allowed to cool down before starting any maintenance work.",
+    "source_file": "maintenance.pdf"
+  },
+  {
+    "question": "What standards must hydraulic oils meet?",
+    "ground_truth": "Hydraulic oils must meet DIN 51524 part 2 HLP, ISO 6743-4 HM, DIN 51524 part 3 HVLP, or ISO 6743-4 HV standards.",
+    "source_file": "maintenance.pdf"
+  },
+  {
+    "question": "What is the recommended hydraulic oil for arctic conditions?",
+    "ground_truth": "For arctic conditions with temperatures below -20 degrees Celsius, synthetic oils are recommended for the hydraulic system.",
+    "source_file": "maintenance.pdf"
+  }
+]

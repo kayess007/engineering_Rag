@@ -1,0 +1,152 @@
+{
+  "manual_id": "24d9b80e-71ea-4bd0-891d-31053892611b",
+  "filename": "cathome.pdf",
+  "content_type": "application/pdf",
+  "element_count": 12,
+  "elements": [
+    {
+      "element_id": "4990c2da-5aef-4ecc-908c-32bcf6a630fc",
+      "type": "Title",
+      "text": "Operation and Maintenance Manual",
+      "page_number": 1,
+      "category_depth": 2,
+      "parent_id": null,
+      "metadata": {
+        "page_number": 1,
+        "source": "pymupdf"
+      }
+    },
+    {
+      "element_id": "b922ad50-c4b0-47b7-881f-2dcab7ee2016",
+      "type": "Title",
+      "text": "Parts Manual",
+      "page_number": 1,
+      "category_depth": 2,
+      "parent_id": null,
+      "metadata": {
+        "page_number": 1,
+        "source": "pymupdf"
+      }
+    },
+    {
+      "element_id": "ccf7f3de-97b8-4c07-ab69-264a974be580",
+      "type": "Title",
+      "text": "CATERPILLAR",
+      "page_number": 1,
+      "category_depth": 1,
+      "parent_id": null,
+      "metadata": {
+        "page_number": 1,
+        "source": "pymupdf"
+      }
+    },
+    {
+      "element_id": "6cabde61-7e2b-4f87-9039-55e298885a6a",
+      "type": "NarrativeText",
+      "text": "®",
+      "page_number": 1,
+      "category_depth": null,
+      "parent_id": null,
+      "metadata": {
+        "page_number": 1,
+        "source": "pymupdf"
+      }
+    },
+    {
+      "element_id": "eca5a420-e360-4398-b6fe-2f0b2a1210ab",
+      "type": "Title",
+      "text": "Operation and Maintenance Manual",
+      "page_number": 1,
+      "category_depth": 2,
+      "parent_id": null,
+      "metadata": {
+        "page_number": 1,
+        "source": "pymupdf"
+      }
+    },
+    {
+      "element_id": "88ce8484-b360-4403-8880-4c0b0ec5b3e0",
+      "type": "NarrativeText",
+      "text": "C13 (TIER4)",
+      "page_number": 1,
+      "category_depth": null,
+      "parent_id": null,
+      "metadata": {
+        "page_number": 1,
+        "source": "pymupdf"
+      }
+    },
+    {
+      "element_id": "3d1de595-2f55-40c9-b83f-0398cd41375a",
+      "type": "NarrativeText",
+      "text": "N3F1-Up",
+      "page_number": 1,
+      "category_depth": null,
+      "parent_id": null,
+      "metadata": {
+        "page_number": 1,
+        "source": "pymupdf"
+      }
+    },
+    {
+      "element_id": "7fd65080-09a5-449f-83c9-7d7a39915d3a",
+      "type": "Title",
+      "text": "Parts Manual",
+      "page_number": 1,
+      "category_depth": 2,
+      "parent_id": null,
+      "metadata": {
+        "page_number": 1,
+        "source": "pymupdf"
+      }
+    },
+    {
+      "element_id": "c3b1d850-8e75-4174-9294-3e6715332f87",
+      "type": "NarrativeText",
+      "text": "C13 (TIER4)",
+      "page_number": 1,
+      "category_depth": null,
+      "parent_id": null,
+      "metadata": {
+        "page_number": 1,
+        "source": "pymupdf"
+      }
+    },
+    {
+      "element_id": "44fd44a3-c3d5-43f6-8658-7e2adb622179",
+      "type": "NarrativeText",
+      "text": "C13 (TIER4)",
+      "page_number": 1,
+      "category_depth": null,
+      "parent_id": null,
+      "metadata": {
+        "page_number": 1,
+        "source": "pymupdf"
+      }
+    },
+    {
+      "element_id": "4dd511b9-0d57-46d1-818a-1001bb5ddc9c",
+      "type": "NarrativeText",
+      "text": "N3F1-Up Volume I",
+      "page_number": 1,
+      "category_depth": null,
+      "parent_id": null,
+      "metadata": {
+        "page_number": 1,
+        "source": "pymupdf"
+      }
+    },
+    {
+      "element_id": "fd41cd54-ea11-45b4-bb28-0f1d6abdfe16",
+      "type": "NarrativeText",
+      "text": "N3F1-Up Volume II",
+      "page_number": 1,
+      "category_depth": null,
+      "parent_id": null,
+      "metadata": {
+        "page_number": 1,
+        "source": "pymupdf"
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+services:
+  api:
+    build: .
+    container_name: engineering_rag_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # Override these in .env or here for production
+      RAG_USERNAME: ${RAG_USERNAME:-admin}
+      RAG_PASSWORD: ${RAG_PASSWORD:-changeme}
+      RAG_JWT_SECRET: ${RAG_JWT_SECRET:-insecure-dev-secret}
+      RAG_JWT_EXPIRE_MINUTES: ${RAG_JWT_EXPIRE_MINUTES:-60}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      # Persist uploads, parsed docs, chunks, and vector DB across restarts
+      - rag_uploads:/app/storage/uploads
+      - rag_parsed:/app/storage/parsed
+      - rag_chunked:/app/storage/chunked
+      - rag_chroma:/app/storage/chroma
+      - rag_results:/app/evaluation/results
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    build: .
+    container_name: engineering_rag_frontend
+    command: streamlit run frontend/app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    environment:
+      RAG_API_BASE: http://api:8000
+    volumes:
+      # Mount live code so changes take effect without rebuilding
+      - ./frontend:/app/frontend
+      - ./app:/app/app
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  rag_uploads:
+  rag_parsed:
+  rag_chunked:
+  rag_chroma:
+  rag_results:
