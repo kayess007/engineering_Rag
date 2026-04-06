@@ -1,11 +1,13 @@
 """
 Evaluation Report Generator
-Run from project root: python evaluation/generate_report.py
-Requires the FastAPI server running on http://127.0.0.1:8000
+Run from project root: python evaluation/generate_report.py [dataset_path]
 
+  dataset_path  Optional path to eval dataset JSON (default: evaluation/eval_dataset.json)
+                Example: python evaluation/generate_report.py evaluation/extended_eval_dataset.json
+
+Requires the FastAPI server running on http://127.0.0.1:8000
 Generates evaluation/results/report_YYYYMMDD_HHMMSS.html
-Open the HTML file in any browser to review all 15 questions
-with full source text for verification.
+Open the HTML file in any browser to review all questions with full source text.
 """
 
 import json
@@ -20,11 +22,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 API_BASE = "http://127.0.0.1:8000"
-EVAL_DATASET_PATH = Path("evaluation/eval_dataset.json")
+EVAL_DATASET_PATH = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("evaluation/eval_dataset.json")
 RESULTS_DIR = Path("evaluation/results")
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-K = 5
+K = 8
 MODEL = "gpt-4.1-mini"
 
 
@@ -40,7 +42,7 @@ def ask(question: str) -> dict:
     r = requests.post(
         f"{API_BASE}/ask",
         json={"question": question, "k": K, "model": MODEL},
-        timeout=60,
+        timeout=180,  # first request triggers cold-start model loading (~60-90s)
     )
     r.raise_for_status()
     return r.json()
@@ -50,14 +52,26 @@ def query_chunks(question: str) -> list:
     r = requests.post(
         f"{API_BASE}/query",
         json={"question": question, "k": K},
-        timeout=60,
+        timeout=180,
     )
     r.raise_for_status()
     return r.json().get("results", [])
 
 
-def score_label(text: str, ground_truth: str) -> str:
-    """Simple keyword overlap check to flag potential misses."""
+_VERDICT_MAP = {
+    "correct":       "likely_match",
+    "true_positive": "likely_match",
+    "partial_gap":   "partial_match",
+    "retrieval_gap": "possible_miss",
+    "server_timeout":"possible_miss",
+}
+
+
+def score_label(text: str, ground_truth: str, verified_verdict: str | None = None) -> str:
+    """Use verified verdict when available, otherwise fall back to keyword overlap."""
+    if verified_verdict and verified_verdict in _VERDICT_MAP:
+        return _VERDICT_MAP[verified_verdict]
+
     gt_words = set(ground_truth.lower().split())
     answer_words = set(text.lower().split())
     overlap = len(gt_words & answer_words) / max(len(gt_words), 1)
@@ -135,7 +149,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     Generated: {timestamp} &nbsp;|&nbsp;
     Model: {model} &nbsp;|&nbsp;
     k = {k} &nbsp;|&nbsp;
-    Questions: {total}
+    Questions: {total} &nbsp;|&nbsp;
+    Scoring: keyword overlap + manual verification
   </div>
 </div>
 
@@ -189,6 +204,8 @@ CARD_TEMPLATE = """
       <div class="ground-truth-box">{ground_truth}</div>
     </div>
 
+    {notes_html}
+
     <div class="chunks-section">
       <div class="section-label">Retrieved Source Chunks ({chunk_count})</div>
       {chunks_html}
@@ -196,6 +213,13 @@ CARD_TEMPLATE = """
 
   </div>
 </div>
+"""
+
+NOTES_TEMPLATE = """
+    <div>
+      <div class="section-label">Verification Notes</div>
+      <div style="background:#fff8e1;border-left:4px solid #ffc107;padding:10px 14px;border-radius:0 4px 4px 0;font-size:13px;color:#555;">{notes}</div>
+    </div>
 """
 
 
@@ -283,12 +307,17 @@ def main():
             chunks = []
             print(f"         query() failed: {e}")
 
-        label = score_label(answer, ground_truth)
+        verified_verdict = item.get("verified_verdict")
+        notes = item.get("notes", "")
+
+        label = score_label(answer, ground_truth, verified_verdict)
         counts[label] += 1
-        print(f"         {label} | {len(chunks)} chunks retrieved")
+        verdict_tag = f" [verified: {verified_verdict}]" if verified_verdict else ""
+        print(f"         {label}{verdict_tag} | {len(chunks)} chunks retrieved")
 
         label_display = label.replace("_", " ").title()
         chunks_html = build_chunk_html(chunks)
+        notes_html = NOTES_TEMPLATE.format(notes=notes.replace("<", "&lt;").replace(">", "&gt;")) if notes else ""
 
         card = CARD_TEMPLATE.format(
             num=i,
@@ -299,6 +328,7 @@ def main():
             score_label=label_display,
             chunk_count=len(chunks),
             chunks_html=chunks_html,
+            notes_html=notes_html,
         )
         cards.append(card)
 

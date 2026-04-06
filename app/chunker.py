@@ -67,19 +67,24 @@ def is_noisy_text(text: str) -> bool:
 
 
 def get_parent_splitter() -> RecursiveCharacterTextSplitter:
-    """Large chunks (1200 tokens) — sent to the LLM for full context."""
+    """Large chunks (1200 tokens) — sent to the LLM for full context.
+    Overlap increased to 200 to keep component lists and structured
+    content intact across chunk boundaries."""
     return RecursiveCharacterTextSplitter(
         chunk_size=1200,
-        chunk_overlap=150,
+        chunk_overlap=200,
         separators=["\n\n", "\n", ". ", "; ", ", ", " "],
     )
 
 
 def get_child_splitter() -> RecursiveCharacterTextSplitter:
-    """Small chunks (400 tokens) — indexed in ChromaDB for precise retrieval."""
+    """Small chunks (300 tokens) — indexed in ChromaDB for precise retrieval.
+    Reduced from 400 to 300 so each embedding captures a tighter, more
+    focused semantic unit. Overlap increased to 75 to avoid splitting
+    key sentences at chunk boundaries."""
     return RecursiveCharacterTextSplitter(
-        chunk_size=400,
-        chunk_overlap=50,
+        chunk_size=300,
+        chunk_overlap=75,
         separators=["\n\n", "\n", ". ", "; ", ", ", " "],
     )
 

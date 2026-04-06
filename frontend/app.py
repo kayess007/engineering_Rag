@@ -73,7 +73,7 @@ if page == "💬 Chat":
 
     # ── Settings ──────────────────────────────────────────────────────────────
     with st.sidebar.expander("Settings", expanded=False):
-        k = st.slider("Chunks to retrieve (k)", 1, 20, 5)
+        k = st.slider("Chunks to retrieve (k)", 1, 20, 8)
         model = st.selectbox("LLM model", ["gpt-4.1-mini", "gpt-4o", "gpt-4o-mini"])
         advanced_mode = st.toggle(
             "Advanced mode",

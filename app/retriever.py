@@ -336,7 +336,7 @@ def deduplicate_results(results: List[Dict], max_results: int) -> List[Dict]:
 def retrieve_chunks_advanced(
     query: str,
     collection_name: str,
-    k: int = 5,
+    k: int = 8,
     rewrite_model: str = "gpt-4.1-mini",
     filters: dict | None = None,
 ) -> List[Dict]:

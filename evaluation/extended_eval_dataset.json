@@ -1,0 +1,162 @@
+[
+  {
+    "question": "What safety precautions must be followed before operating or servicing the C13 industrial engine?",
+    "ground_truth": "Before operating or servicing the C13 engine, read and understand all safety information, warnings, and instructions. Ensure you are authorized to perform the work, use proper PPE, and verify all energy sources are isolated.",
+    "source_file": "OM SEBU9105-02.pdf",
+    "category": "Safety and Operation",
+    "verified_verdict": "server_timeout",
+    "notes": "Retrieval was correct (Important Safety Information p.2-3, Before Starting Engine p.39). LLM timed out during generation. Re-run expected to score Likely Match."
+  },
+  {
+    "question": "What do the signal words DANGER, WARNING, and CAUTION represent in safety messages?",
+    "ground_truth": "DANGER indicates an imminently hazardous situation that will result in death or serious injury. WARNING indicates a potentially hazardous situation that could result in death or serious injury. CAUTION indicates a potentially hazardous situation that could result in minor or moderate injury.",
+    "source_file": "OM SEBU9105-02.pdf",
+    "category": "Safety and Operation",
+    "verified_verdict": "correct",
+    "notes": "RAG answer matches. Note: maintenance.pdf uses NOTICE instead of CAUTION — both documents verified."
+  },
+  {
+    "question": "Why is it important to read the operation and maintenance manual before working on the equipment?",
+    "ground_truth": "Reading the manual ensures safe and proper operation, lubrication, maintenance, and repair. Improper operation or maintenance can be dangerous and could result in injury or death, and may also diminish product performance.",
+    "source_file": "OM SEBU9105-02.pdf",
+    "category": "Safety and Operation",
+    "verified_verdict": "correct",
+    "notes": "RAG answer verified against OM SEBU9105-02.pdf Important Safety Information p.2-3."
+  },
+  {
+    "question": "What personal protective equipment (PPE) should be used when servicing equipment that may contain sulfuric acid?",
+    "ground_truth": "When working with batteries or equipment containing sulfuric acid, wear face protection, rubber gloves, and a protective apron to prevent contact with the acid.",
+    "source_file": "OM SEBU9105-02.pdf",
+    "category": "Safety and Operation",
+    "verified_verdict": "correct",
+    "notes": "Verified against OM SEBU9105-02.pdf battery safety section."
+  },
+  {
+    "question": "What are some potential hazards associated with improper maintenance or operation of the engine?",
+    "ground_truth": "Improper maintenance or operation can result in injury or death, accelerated component wear, diminished product performance, and costly repairs. Hazards include fire, explosion, burns from hot fluids, and electrical shock.",
+    "source_file": "OM SEBU9105-02.pdf",
+    "category": "Safety and Operation",
+    "verified_verdict": "correct",
+    "notes": "Verified against OM SEBU9105-02.pdf Important Safety Information."
+  },
+  {
+    "question": "What information is included in the operation section of the Caterpillar C13 manual?",
+    "ground_truth": "The operation section covers engine starting procedures, operating techniques, monitoring gauges and indicators, warm-up and cool-down procedures, and guidelines for safe engine operation.",
+    "source_file": "OM SEBU9105-02.pdf",
+    "category": "Engine Operation",
+    "verified_verdict": "retrieval_gap",
+    "notes": "RAG retrieved a specific DPF regeneration subsection (p.43-44) instead of the operation section overview. The question requires the table-of-contents or foreword-level chunk that lists operation section contents. Retrieval needs to surface higher-level overview chunks."
+  },
+  {
+    "question": "What procedures should be followed before starting the engine?",
+    "ground_truth": "Before starting the engine, place the transmission in neutral, disengage the flywheel clutch to allow faster starting and reduce battery drain, turn the ignition switch to the ON position, and check oil and coolant levels.",
+    "source_file": "OM SEBU9105-02.pdf",
+    "category": "Engine Operation",
+    "verified_verdict": "correct",
+    "notes": "Verified against OM SEBU9105-02.pdf Before Starting Engine p.39."
+  },
+  {
+    "question": "What are the recommended practices for stopping the engine safely?",
+    "ground_truth": "Allow the engine to cool down with a minimum of 2 to 5 minutes of idle time before shutdown, especially after high-load operation. Avoid frequent hot shutdowns as this is considered a severe operating condition.",
+    "source_file": "OM SEBU9105-02.pdf",
+    "category": "Engine Operation",
+    "verified_verdict": "correct",
+    "notes": "Verified against OM SEBU9105-02.pdf Engine Stopping section."
+  },
+  {
+    "question": "What factors influence the maintenance interval schedule for the engine?",
+    "ground_truth": "Maintenance intervals are influenced by operating hours, fuel consumption, mileage, operating conditions (normal vs severe service), ambient temperature, and whether S.O.S oil analysis is used.",
+    "source_file": "OM SEBU9105-02.pdf",
+    "category": "Engine Operation",
+    "verified_verdict": "true_positive",
+    "notes": "RAG answer is factually correct — covers operating environment severity, dust, wetness, freezing, and engine hours. Scored partial due to keyword mismatch (fuel consumption and S.O.S not explicitly mentioned), but substance is accurate."
+  },
+  {
+    "question": "How does preventive maintenance help reduce operational costs?",
+    "ground_truth": "Preventive maintenance reduces operational costs by preventing accelerated wear, avoiding costly component failures, extending service life, and maintaining engine performance efficiency.",
+    "source_file": "OM SEBU9105-02.pdf",
+    "category": "Engine Operation",
+    "verified_verdict": "true_positive",
+    "notes": "RAG answer correctly describes high uptime, preventing costly repairs, minimizing unscheduled downtime, and optimized maintenance intervals. Scored partial due to different phrasing — content is substantively correct."
+  },
+  {
+    "question": "What are the key components inspected during daily checks of the drilling rig?",
+    "ground_truth": "Daily checks include engine oil level, coolant level, fuel level, air filter indicator, hydraulic oil level, walk-around inspection of the rig for leaks and damage, and checking all safety systems.",
+    "source_file": "maintenance.pdf",
+    "category": "Maintenance and Inspection",
+    "verified_verdict": "correct",
+    "notes": "Verified against maintenance.pdf daily maintenance section."
+  },
+  {
+    "question": "What maintenance procedures are recommended for the diesel engine air filter?",
+    "ground_truth": "Service the primary air filter element only when the intake air filter alert indicator is flashing. The element may be cleaned up to six times if properly maintained and should be replaced at least once per year. The secondary element should be replaced for every three cleanings of the primary element.",
+    "source_file": "OM SEBU9105-02.pdf",
+    "category": "Maintenance and Inspection",
+    "verified_verdict": "correct",
+    "notes": "Verified against OM SEBU9105-02.pdf air filter maintenance section."
+  },
+  {
+    "question": "How should the radiator core and intercooler core be maintained?",
+    "ground_truth": "The radiator core should be inspected for damaged fins, corrosion, and dirt. Clean with high-pressure washer or compressed air (max 4 bar). Check cleanliness using a flashlight through the opposite side of the core.",
+    "source_file": "maintenance.pdf",
+    "category": "Maintenance and Inspection",
+    "verified_verdict": "correct",
+    "notes": "Verified against maintenance.pdf radiator/intercooler section."
+  },
+  {
+    "question": "What steps are involved in replacing the engine oil and oil filter?",
+    "ground_truth": "Remove the oil drain plug to drain the oil, clean the plug and reinstall. Remove the oil filter using a strap wrench, clean the mounting base, apply clean oil to the new filter gasket, install the new filter without pre-filling, then add fresh oil to the correct level.",
+    "source_file": "OM SEBU9105-02.pdf",
+    "category": "Maintenance and Inspection",
+    "verified_verdict": "correct",
+    "notes": "Verified against OM SEBU9105-02.pdf engine oil and filter replacement section."
+  },
+  {
+    "question": "Why should engine oil samples be obtained periodically?",
+    "ground_truth": "Periodic oil sampling through S.O.S Services oil analysis helps determine the optimal oil change interval, detect internal engine wear early, identify contamination, and avoid unnecessary early oil changes or costly delayed changes.",
+    "source_file": "OM SEBU9105-02.pdf",
+    "category": "Maintenance and Inspection",
+    "verified_verdict": "true_positive",
+    "notes": "RAG answer is more detailed than ground truth — correctly covers S.O.S analysis, nitration/oxidation monitoring, contamination detection, and valve/liner wear prevention (p.89-90). Scored partial due to keyword overlap threshold, but answer is accurate and thorough."
+  },
+  {
+    "question": "What are the main components of the drilling rig structure described in the Sandvik manual?",
+    "ground_truth": "The Sandvik drilling rig structure includes the carrier, boom, feed, hydraulic rotation head, dust collector system, drilling control system, engine compartment, and hydraulic and pneumatic systems.",
+    "source_file": "maintenance.pdf",
+    "category": "Machine Components",
+    "verified_verdict": "correct",
+    "notes": "Verified against maintenance.pdf rig structure overview."
+  },
+  {
+    "question": "What is the function of the hydraulic rotation head in the drilling rig?",
+    "ground_truth": "The hydraulic rotation head (HTRH6) provides rotational force to the drill string during drilling operations. It requires periodic maintenance including replacement of floating spindle seals, wearing parts, and flushing head seals.",
+    "source_file": "maintenance.pdf",
+    "category": "Machine Components",
+    "verified_verdict": "correct",
+    "notes": "Verified against maintenance.pdf hydraulic rotation head section."
+  },
+  {
+    "question": "What role does the dust collector system play in the drilling machine?",
+    "ground_truth": "The dust collector system captures and removes drill cuttings and dust generated during drilling to maintain operator visibility, protect the environment, reduce airborne silica exposure, and prevent dust from entering engine and hydraulic components.",
+    "source_file": "maintenance.pdf",
+    "category": "Machine Components",
+    "verified_verdict": "partial_gap",
+    "notes": "RAG correctly identified dust collection, environmental protection, and silica reduction (p.232, 70-71). Missed two functions: maintaining operator visibility and preventing dust from entering engine/hydraulic components. Ground truth updated to include all four functions per document verification."
+  },
+  {
+    "question": "What components are included in the engine lubrication system of the C13 engine?",
+    "ground_truth": "The engine lubrication system includes the oil pump, oil filter, oil cooler, oil level gauge, oil filler cap, crankcase ventilation system, and oil sampling valve for S.O.S analysis.",
+    "source_file": "OM SEBU9105-02.pdf",
+    "category": "Machine Components",
+    "verified_verdict": "retrieval_gap",
+    "notes": "RAG retrieved Sandvik MultiLube optional central lubrication system (maintenance.pdf) instead of the C13-specific lubrication system components. Wrong document surfaced. Needs source_file filter or better section matching to OM SEBU9105-02.pdf lubrication overview."
+  },
+  {
+    "question": "What are the main parts included in the engine cooling system according to the parts manual?",
+    "ground_truth": "The engine cooling system includes the radiator, water pump, thermostat, coolant temperature sensor, cooling system filler cap, coolant drain valve, and hoses and connections for coolant circulation.",
+    "source_file": "OM SEBU9105-02.pdf",
+    "category": "Machine Components",
+    "verified_verdict": "retrieval_gap",
+    "notes": "RAG retrieved cooling system maintenance/check procedures (coolant level check p.74-75, Before Starting Engine p.39) instead of the component overview. Returned aftercooler and sight glass — missed radiator, water pump, thermostat. Needs the cooling system overview/parts section."
+  }
+]

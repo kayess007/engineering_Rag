@@ -81,7 +81,7 @@ def delete_manual(manual_id: str, token: str) -> dict:
     return r.json()
 
 
-def ask(question: str, k: int = 5, model: str = "gpt-4.1-mini") -> dict:
+def ask(question: str, k: int = 8, model: str = "gpt-4.1-mini") -> dict:
     r = requests.post(
         f"{BASE_URL}/ask",
         json={"question": question, "k": k, "model": model},
@@ -91,7 +91,7 @@ def ask(question: str, k: int = 5, model: str = "gpt-4.1-mini") -> dict:
     return r.json()
 
 
-def ask_advanced(question: str, k: int = 5, model: str = "gpt-4.1-mini") -> dict:
+def ask_advanced(question: str, k: int = 8, model: str = "gpt-4.1-mini") -> dict:
     r = requests.post(
         f"{BASE_URL}/ask/advanced",
         json={"question": question, "k": k, "model": model},
@@ -101,7 +101,7 @@ def ask_advanced(question: str, k: int = 5, model: str = "gpt-4.1-mini") -> dict
     return r.json()
 
 
-def query(question: str, k: int = 5) -> list[dict]:
+def query(question: str, k: int = 8) -> list[dict]:
     r = requests.post(
         f"{BASE_URL}/query",
         json={"question": question, "k": k},

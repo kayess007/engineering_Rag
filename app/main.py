@@ -45,14 +45,14 @@ class IndexRequest(BaseModel):
 class QueryRequest(BaseModel):
     question: str
     collection_name: str = "engineering_manuals"
-    k: int = 5
+    k: int = 8
     filters: dict | None = None
 
 
 class AskRequest(BaseModel):
     question: str
     collection_name: str = "engineering_manuals"
-    k: int = 5
+    k: int = 8
     model: str = "gpt-4.1-mini"
     filters: dict | None = None
 
@@ -261,7 +261,7 @@ def query_manuals(req: QueryRequest):
 class AskAdvancedRequest(BaseModel):
     question: str
     collection_name: str = "engineering_manuals"
-    k: int = 5
+    k: int = 8
     model: str = "gpt-4.1-mini"
     rewrite_model: str = "gpt-4.1-mini"
     filters: dict | None = None

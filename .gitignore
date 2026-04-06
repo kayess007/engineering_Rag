@@ -1,8 +1,12 @@
-app/.env
+# Environment variables
 .env
+app/.env
+**/.env
+
+# Local development tools
 .claude/
 .vscode/
-.env
+
+# Storage and generated data
 storage/
 evaluation/results/
-**/ .env
