@@ -18,3 +18,4 @@ pandas
 PyJWT
 python-jose[cryptography]
 passlib[bcrypt]
+rank-bm25

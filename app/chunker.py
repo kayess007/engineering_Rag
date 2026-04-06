@@ -66,10 +66,20 @@ def is_noisy_text(text: str) -> bool:
     return any(pattern in lowered for pattern in noisy_patterns)
 
 
-def get_splitter() -> RecursiveCharacterTextSplitter:
+def get_parent_splitter() -> RecursiveCharacterTextSplitter:
+    """Large chunks (1200 tokens) — sent to the LLM for full context."""
     return RecursiveCharacterTextSplitter(
         chunk_size=1200,
         chunk_overlap=150,
+        separators=["\n\n", "\n", ". ", "; ", ", ", " "],
+    )
+
+
+def get_child_splitter() -> RecursiveCharacterTextSplitter:
+    """Small chunks (400 tokens) — indexed in ChromaDB for precise retrieval."""
+    return RecursiveCharacterTextSplitter(
+        chunk_size=400,
+        chunk_overlap=50,
         separators=["\n\n", "\n", ". ", "; ", ", ", " "],
     )
 
@@ -96,38 +106,73 @@ def make_semantic_chunks(
     element_types: List[str],
     page_numbers: List[int],
 ) -> List[Dict[str, Any]]:
-    splitter = get_splitter()
-    split_texts = splitter.split_text(combined_text)
+    """
+    Hierarchical parent-child chunking:
+    - Parent chunks (1200 tokens) carry full context for the LLM.
+    - Child chunks (400 tokens) are indexed in ChromaDB for precise retrieval.
+    - Each child links back to its parent via parent_id.
+    """
+    parent_splitter = get_parent_splitter()
+    child_splitter = get_child_splitter()
 
+    parent_texts = parent_splitter.split_text(combined_text)
     page_start = min(page_numbers) if page_numbers else None
     page_end = max(page_numbers) if page_numbers else None
 
     chunks = []
 
-    for idx, chunk_text in enumerate(split_texts, start=1):
-        cleaned_chunk = clean_text(chunk_text)
-
-        if len(cleaned_chunk) < MIN_SECTION_CHARS:
+    for parent_text in parent_texts:
+        cleaned_parent = clean_text(parent_text)
+        if len(cleaned_parent) < MIN_SECTION_CHARS:
             continue
 
+        parent_id = str(uuid.uuid4())
+
+        # Parent chunk — stored in JSON, returned to LLM
         chunks.append(
             {
-                "chunk_id": str(uuid.uuid4()),
+                "chunk_id": parent_id,
+                "chunk_type": "parent",
                 "manual_id": manual_id,
                 "section_title": section_title or "Untitled Section",
                 "content_type": "section",
                 "page_start": page_start,
                 "page_end": page_end,
-                "text": cleaned_chunk,
+                "text": cleaned_parent,
                 "element_types": sorted(list(set(element_types))),
                 "metadata": {
                     "source_file": filename,
                     "parent_section": section_title or "Untitled Section",
-                    "chunk_index": idx,
-                    "chunk_count": len(split_texts),
                 },
             }
         )
+
+        # Child chunks — indexed in ChromaDB for vector search
+        child_texts = child_splitter.split_text(cleaned_parent)
+        for idx, child_text in enumerate(child_texts, start=1):
+            cleaned_child = clean_text(child_text)
+            if len(cleaned_child) < MIN_SECTION_CHARS:
+                continue
+
+            chunks.append(
+                {
+                    "chunk_id": str(uuid.uuid4()),
+                    "chunk_type": "child",
+                    "parent_id": parent_id,
+                    "manual_id": manual_id,
+                    "section_title": section_title or "Untitled Section",
+                    "content_type": "section",
+                    "page_start": page_start,
+                    "page_end": page_end,
+                    "text": cleaned_child,
+                    "element_types": sorted(list(set(element_types))),
+                    "metadata": {
+                        "source_file": filename,
+                        "parent_section": section_title or "Untitled Section",
+                        "child_index": idx,
+                    },
+                }
+            )
 
     return chunks
 
@@ -217,9 +262,11 @@ def chunk_parsed_document(parsed_doc: Dict[str, Any]) -> List[Dict[str, Any]]:
             if len(cleaned_table_text) < 20:
                 continue
 
+            table_id = str(uuid.uuid4())
             chunks.append(
                 {
-                    "chunk_id": str(uuid.uuid4()),
+                    "chunk_id": table_id,
+                    "chunk_type": "parent",
                     "manual_id": manual_id,
                     "section_title": current_section_title,
                     "content_type": "table",
@@ -231,6 +278,25 @@ def chunk_parsed_document(parsed_doc: Dict[str, Any]) -> List[Dict[str, Any]]:
                         "source_file": filename,
                         "parent_section": current_section_title,
                         "text_as_html": el.get("metadata", {}).get("text_as_html"),
+                    },
+                }
+            )
+            # Table child — indexes the same text so tables are retrievable via vector search
+            chunks.append(
+                {
+                    "chunk_id": str(uuid.uuid4()),
+                    "chunk_type": "child",
+                    "parent_id": table_id,
+                    "manual_id": manual_id,
+                    "section_title": current_section_title,
+                    "content_type": "table",
+                    "page_start": page_number,
+                    "page_end": page_number,
+                    "text": cleaned_table_text,
+                    "element_types": [el_type],
+                    "metadata": {
+                        "source_file": filename,
+                        "parent_section": current_section_title,
                     },
                 }
             )

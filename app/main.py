@@ -46,6 +46,7 @@ class QueryRequest(BaseModel):
     question: str
     collection_name: str = "engineering_manuals"
     k: int = 5
+    filters: dict | None = None
 
 
 class AskRequest(BaseModel):
@@ -53,6 +54,7 @@ class AskRequest(BaseModel):
     collection_name: str = "engineering_manuals"
     k: int = 5
     model: str = "gpt-4.1-mini"
+    filters: dict | None = None
 
 
 @app.get("/")
@@ -240,6 +242,7 @@ def query_manuals(req: QueryRequest):
             query=req.question,
             collection_name=req.collection_name,
             k=req.k,
+            filters=req.filters,
         )
 
         return {
@@ -261,6 +264,7 @@ class AskAdvancedRequest(BaseModel):
     k: int = 5
     model: str = "gpt-4.1-mini"
     rewrite_model: str = "gpt-4.1-mini"
+    filters: dict | None = None
 
 
 @app.post("/ask/advanced")
@@ -274,6 +278,7 @@ def ask_manuals_advanced(req: AskAdvancedRequest):
             collection_name=req.collection_name,
             k=req.k,
             rewrite_model=req.rewrite_model,
+            filters=req.filters,
         )
 
         rag_result = generate_rag_answer(
@@ -312,6 +317,7 @@ def ask_manuals(req: AskRequest):
             query=req.question,
             collection_name=req.collection_name,
             k=req.k,
+            filters=req.filters,
         )
 
         rag_result = generate_rag_answer(

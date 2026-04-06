@@ -1,0 +1,3250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Engineering RAG — Evaluation Report</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          background: #f5f5f5; color: #222; line-height: 1.6; }
+  .header { background: #1a1a2e; color: white; padding: 32px 40px; }
+  .header h1 { font-size: 24px; font-weight: 700; }
+  .header .meta { margin-top: 8px; font-size: 14px; opacity: 0.75; }
+  .summary { background: white; border-bottom: 1px solid #e0e0e0;
+              padding: 20px 40px; display: flex; gap: 40px; }
+  .stat { text-align: center; }
+  .stat .value { font-size: 28px; font-weight: 700; color: #1a1a2e; }
+  .stat .label { font-size: 12px; color: #666; text-transform: uppercase; }
+  .container { max-width: 1100px; margin: 32px auto; padding: 0 20px; }
+  .question-card { background: white; border-radius: 8px; margin-bottom: 28px;
+                    box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; }
+  .q-header { padding: 16px 24px; display: flex; align-items: center; gap: 12px;
+               border-bottom: 1px solid #f0f0f0; }
+  .q-num { background: #1a1a2e; color: white; border-radius: 50%;
+             width: 32px; height: 32px; display: flex; align-items: center;
+             justify-content: center; font-weight: 700; font-size: 14px;
+             flex-shrink: 0; }
+  .q-text { font-size: 16px; font-weight: 600; }
+  .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px;
+             font-weight: 600; text-transform: uppercase; margin-left: auto;
+             flex-shrink: 0; }
+  .likely_match { background: #d4edda; color: #155724; }
+  .partial_match { background: #fff3cd; color: #856404; }
+  .possible_miss { background: #f8d7da; color: #721c24; }
+  .q-body { padding: 20px 24px; display: grid; gap: 16px; }
+  .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase;
+                    color: #888; margin-bottom: 6px; letter-spacing: 0.5px; }
+  .answer-box { background: #f0f7ff; border-left: 4px solid #2196f3;
+                  padding: 14px 16px; border-radius: 0 4px 4px 0; }
+  .ground-truth-box { background: #f0fff4; border-left: 4px solid #4caf50;
+                        padding: 14px 16px; border-radius: 0 4px 4px 0; }
+  .chunks-section { margin-top: 4px; }
+  .chunk { background: #fafafa; border: 1px solid #e8e8e8; border-radius: 6px;
+             margin-bottom: 10px; overflow: hidden; }
+  .chunk-meta { background: #f0f0f0; padding: 8px 14px; font-size: 12px;
+                  color: #555; display: flex; gap: 16px; flex-wrap: wrap; }
+  .chunk-meta span { display: flex; align-items: center; gap: 4px; }
+  .chunk-meta .tag { background: #ddd; padding: 2px 8px; border-radius: 10px;
+                       font-size: 11px; font-weight: 600; }
+  .chunk-text { padding: 14px; font-size: 13px; line-height: 1.7;
+                  white-space: pre-wrap; word-break: break-word; color: #333; }
+  .no-chunks { color: #999; font-style: italic; font-size: 13px; }
+  .footer { text-align: center; padding: 40px; color: #aaa; font-size: 12px; }
+  @media print {
+    .question-card { page-break-inside: avoid; }
+    body { background: white; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Engineering RAG — Evaluation Report</h1>
+  <div class="meta">
+    Generated: 2026-04-05 03:01:53 &nbsp;|&nbsp;
+    Model: gpt-4.1-mini &nbsp;|&nbsp;
+    k = 5 &nbsp;|&nbsp;
+    Questions: 15
+  </div>
+</div>
+
+<div class="summary">
+  <div class="stat">
+    <div class="value">15</div>
+    <div class="label">Total Questions</div>
+  </div>
+  <div class="stat">
+    <div class="value" style="color:#155724">10</div>
+    <div class="label">Likely Match</div>
+  </div>
+  <div class="stat">
+    <div class="value" style="color:#856404">3</div>
+    <div class="label">Partial Match</div>
+  </div>
+  <div class="stat">
+    <div class="value" style="color:#721c24">2</div>
+    <div class="label">Possible Miss</div>
+  </div>
+</div>
+
+<div class="container">
+
+<div class="question-card">
+  <div class="q-header">
+    <div class="q-num">1</div>
+    <div class="q-text">What is the recommended hydraulic oil viscosity at operating temperature?</div>
+    <div class="badge possible_miss">Possible Miss</div>
+  </div>
+  <div class="q-body">
+
+    <div>
+      <div class="section-label">RAG Answer</div>
+      <div class="answer-box">ERROR: HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out. (read timeout=60)</div>
+    </div>
+
+    <div>
+      <div class="section-label">Ground Truth</div>
+      <div class="ground-truth-box">The viscosity of hydraulic oils at operating temperature should be close to 60 cSt, and any variation in continuous use should remain within the range 50-110 cSt.</div>
+    </div>
+
+    <div class="chunks-section">
+      <div class="section-label">Retrieved Source Chunks (5)</div>
+      
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#1</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 Hydraulic system</span>
+    <span>📃 Page 244</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Hydraulic system
+Oil viscosity recommendations are based on the operating temperature of
+the oil.
+Note!
+Never mix different types of hydraulic system oils. Mixing can
+damage the hydraulic components.
+The selected hydraulic oil must be high quality and must retain its
+properties in fluctuating temperature conditions. Furthermore, it should
+contain additives typical of high performance hydraulic oils.
+When choosing the viscosity of the oil to be used, the temperature of the
+drilling environment is important. Pay attention to temperature fluctuation.
+When choosing the oil, consider the following:
+1. Check or estimate the operating temperature of the oil.
+2. The viscosity of oils at their operating temperature should be close to 60
+cSt, and any variation in continuous use should remain within the range
+50–110 cSt.
+The following variation limits are permitted temporarily (but not
+constantly):
+• 110–200 cSt as a result of a low temperature peak, or
+• 30–50 cSt as a result of a high temperature peak.
+The values indicated in the tables should be considered first and
+foremost. In each case you must always make sure that the product in
+question has the required properties.</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#2</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 245</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+4. If the drilling conditions are such that single-grade oils do not remain
+within the given viscosity limits, choose a multigrade oil.
+5. The oil should be changed once a year unless heavy use requires more
+frequent changes. This change interval recommendation is based on the
+extent that the oil ages and gathers moisture over a one-year period.
+For arctic conditions (temperatures below –20°C), we recommend synthetic
+oils.
+Maximum permissible degree of contamination of the hydraulic fluid;
+cleanliness class 20/15/12 according to the ISO 4406 (c).
+A recommended water content for the hydraulic oils is &lt;1000 ppm.
+Hydraulic oils
+DIN 51524 part 2 HLP, ISO 6743-4 HM, DIN 51524 part 3 HVLP, ISO
+6743-4 HV
+Viscosity/temperature table
+Viscosity cSt
+(40°C)
+Operating temperature
+°C
+°F
+-30
+-22
+-20
+-4
+-10
++14
+0
++32
++10
++50
++20
++68
++30
++86
++40
++104
++50
++122
++60
++140
++70
++158
+32
+46
+68
+100
+150
+Recommended temperature range
+Temporarily allowed temperature range
+Lowest permitted starting temperature
+Oils and fluids suitable for hydraulic systems are, e.g.
+• Shell Tellus S2 V 68 (hydraulic oil)
+245 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#3</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 246</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+Biodegradable hydraulic oils
+Sandvik sets the same high technical quality requirements for
+biodegradable oils as are set for conventional mineral oils. In addition, the
+oils must be environmentally friendly in terms of the following quality
+requirements:
+• biodegradability
+• toxicity
+• use and disposal.
+The international standard ISO 15380 specifies the requirements for
+environmentally acceptable hydraulic fluids.
+Viscosity/temperature table
+Viscosity cSt
+(40°C)
+Operating temperature
+°C
+°F
+-30
+-22
+-20
+-4
+-10
++14
+0
++32
++10
++50
++20
++68
++30
++86
++40
++104
++50
++122
++60
++140
++70
++158
+46
+68
+Recommended temperature range
+Temporarily allowed temperature range
+Lowest permitted starting temperature
+Instructions for changing biodegradable oils are provided in the manual
+"Biodegradable hydraulic oils – change instructions".
+Note!
+When biodegradable oils (optional) are used, Sandvik factory fill oils
+are SHELL NATURELLE HFE 46 or HFE 68 (synthetic ester). The
+guarantee is valid only when these oils are used.
+Oils and fluids suitable for hydraulic systems are, e.g.
+• Shell Naturelle HFE (biodegradable hydraulic oil, synthetic ester)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#4</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 243</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+Oil viscosity
+Too low viscosity causes:
+• breaking of the lubrication film between contact surfaces. The resulting
+metal-to-metal contact between surfaces causes rapid wear and
+increases the need for maintenance.
+• internal leaks in components, which reduces efficiency.
+Too high viscosity causes:
+• flow losses in the system, which also reduces efficiency
+• increase in the load on the seals due to increased return line pressure
+• for certain rock drills, wear of the rotation shaft and thrust bearing due to
+increased return line pressure
+• too thick oil increases the risk of cavitation in pumps.
+SAE classification (engine oils)
+(SAE = Society of Automotive Engineers)
+Viscosity indicates the oil's ability to flow. Viscosity is measured at a high
+and low temperature and is indicated as an SAE grade, e.g. SAE 40. For
+multigrade oils, e.g. 5W-40, the first value (5W) indicates the oil’s viscosity
+at low temperatures, and the second value (40) indicates the oil’s viscosity
+when it is hot.
+ISO classification (industrial oils)
+(ISO = International Organization for Standardization)
+The viscosity of industrial oils is determined by the ISO-VG standard (ISO</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#5</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 General</span>
+    <span>📃 Page 242</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Mistakes in choosing and using oil
+Components may be damaged if
+• a wrong oil type has been chosen
+• a wrong oil viscosity has been chosen
+• the recommended oil change interval is exceeded.
+Oils must be changed at certain intervals because the properties of the oil
+and its additives deteriorate and are lost as the oil ages.
+Note!
+Observe the color and clearness of the oil. Water and other
+impurities in the oil can cause malfunctions in the hydraulic system
+and serious component damage (e.g. to rock drills). If the oil is light
+grey or dull, change the oil. Find the cause of the oil impurity.
+242 (348)</div>
+</div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<div class="question-card">
+  <div class="q-header">
+    <div class="q-num">2</div>
+    <div class="q-text">What is the tightening torque for the hydraulic oil receiver cover mounting screws?</div>
+    <div class="badge likely_match">Likely Match</div>
+  </div>
+  <div class="q-body">
+
+    <div>
+      <div class="section-label">RAG Answer</div>
+      <div class="answer-box">Answer:
+The tightening torque for the hydraulic oil receiver cover mounting screws is 25 Nm. Apply sealing compound (Loctite 5923 or equivalent) on both sides of the rubber seal.
+
+Sources:
+- maintenance.pdf | DI450-DI560 TIER4 | pages 210-210</div>
+    </div>
+
+    <div>
+      <div class="section-label">Ground Truth</div>
+      <div class="ground-truth-box">The tightening torque for the cover mounting screws is 25 Nm. Sealing compound such as Loctite 5923 or equivalent should be applied on both sides of the rubber seal.</div>
+    </div>
+
+    <div class="chunks-section">
+      <div class="section-label">Retrieved Source Chunks (5)</div>
+      
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#1</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 210</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+5.10.8
+Cleaning the hydraulic oil receiver
+1. Clean the exterior of the hydraulic oil receiver.
+2. To facilitate cleaning, remove the breather bracket and receiver cover on
+top of the receiver.
+3. Empty the oil receiver into an oil receptacle through a draining collector.
+On the draining collector, the hydraulic oil drain cock is marked with the
+.
+symbol
+4. Clean, rinse, and dry the receiver thoroughly.
+5. Reinstall the receiver cover.
+The tightening torque for the cover mounting screws is 25 Nm. Apply
+sealing compound (Loctite 5923 or equivalent) on both sides of the
+rubber seal.
+6. Before adding oil to the receiver, make sure that the receiver is free of
+dirt and other impurities and that the drain cock is closed.
+7. Add hydraulic oil to the receiver using a filling pump.
+210 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#2</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 217</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+5.11.8
+Replacing the oil separator filter cartridge
+When replacement of the oil separator cartridge coincides with the same
+hour count as cleaning of the compressor oil receiver, replace the filter
+cartridge at the same time as cleaning the receiver.
+1. Ensure that there is no pressure in the pneumatic system.
+2. Place the valve (2) onto a support and detach it from the flange (3).
+3. Open the receiver cover (1) and disconnect the grounding strips from the
+filter cartridge (4).
+4. Remove the old filter cartridge and seal.
+5. Fit the new filter cartridge and seal in place.
+6. Reconnect the grounding strips to the filter cartridge.
+7. Reinstall the receiver cover and tighten the cover mounting screws.
+The correct tightening torque for the cover screws is 170 Nm.
+8. Reinstall the valve (2).
+1
+2
+3
+4
+217 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#3</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 195</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+7. Slide the rubber coupling back so that it is in contact with the crankshaft
+pulley.
+8. Tighten the rubber coupling mounting screws.
+Apply threadlocker (Loctite 243 or similar). The correct tightening torque
+for the mounting screws is 49 Nm.
+195 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#4</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DANGER</span>
+    <span>📃 Page 272</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DANGER
+CRUSHING HAZARD!
+Crushing underneath the rig will cause death or severe injury.
+Before disconnecting the rig from the towing vehicle, the driving
+gears must be reconnected.
+2
+1
+1
+1
+2
+2
+You need a 13 mm spanner to remove and fasten the screws.
+The tightening torque of the screws is 20 Nm.
+1. Remove the two hex. head screws (1) from the cover (2).
+2. Remove the cover (2), turn it upside down, and fasten it back with the
+screws (1) as shown.
+Note that after these procedures oil level must be checked and oil
+must be added if needed.
+272 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#5</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 177</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+5.7.11
+Checking the oscillation cylinder mounting bolts
+1. Check the tightening torque of the cylinders’ expansion pin screws (1).
+The torque should be 290 Nm.
+2
+3
+1
+2
+Expansion pin parts
+1
+Tightening screw
+2
+Conical bushings (2 pcs)
+3
+Pin
+177 (348)</div>
+</div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<div class="question-card">
+  <div class="q-header">
+    <div class="q-num">3</div>
+    <div class="q-text">What hydraulic oil cleanliness class is required?</div>
+    <div class="badge likely_match">Likely Match</div>
+  </div>
+  <div class="q-body">
+
+    <div>
+      <div class="section-label">RAG Answer</div>
+      <div class="answer-box">Answer:
+The required hydraulic oil cleanliness class is 20/15/12 according to ISO 4406 (c).
+
+Sources:
+- maintenance.pdf | DI450-DI560 TIER4 | page 245</div>
+    </div>
+
+    <div>
+      <div class="section-label">Ground Truth</div>
+      <div class="ground-truth-box">The maximum permissible degree of contamination of the hydraulic fluid is cleanliness class 20/15/12 according to ISO 4406.</div>
+    </div>
+
+    <div class="chunks-section">
+      <div class="section-label">Retrieved Source Chunks (5)</div>
+      
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#1</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 245</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+4. If the drilling conditions are such that single-grade oils do not remain
+within the given viscosity limits, choose a multigrade oil.
+5. The oil should be changed once a year unless heavy use requires more
+frequent changes. This change interval recommendation is based on the
+extent that the oil ages and gathers moisture over a one-year period.
+For arctic conditions (temperatures below –20°C), we recommend synthetic
+oils.
+Maximum permissible degree of contamination of the hydraulic fluid;
+cleanliness class 20/15/12 according to the ISO 4406 (c).
+A recommended water content for the hydraulic oils is &lt;1000 ppm.
+Hydraulic oils
+DIN 51524 part 2 HLP, ISO 6743-4 HM, DIN 51524 part 3 HVLP, ISO
+6743-4 HV
+Viscosity/temperature table
+Viscosity cSt
+(40°C)
+Operating temperature
+°C
+°F
+-30
+-22
+-20
+-4
+-10
++14
+0
++32
++10
++50
++20
++68
++30
++86
++40
++104
++50
++122
++60
++140
++70
++158
+32
+46
+68
+100
+150
+Recommended temperature range
+Temporarily allowed temperature range
+Lowest permitted starting temperature
+Oils and fluids suitable for hydraulic systems are, e.g.
+• Shell Tellus S2 V 68 (hydraulic oil)
+245 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#2</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 Hydraulic system</span>
+    <span>📃 Page 244</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Hydraulic system
+Oil viscosity recommendations are based on the operating temperature of
+the oil.
+Note!
+Never mix different types of hydraulic system oils. Mixing can
+damage the hydraulic components.
+The selected hydraulic oil must be high quality and must retain its
+properties in fluctuating temperature conditions. Furthermore, it should
+contain additives typical of high performance hydraulic oils.
+When choosing the viscosity of the oil to be used, the temperature of the
+drilling environment is important. Pay attention to temperature fluctuation.
+When choosing the oil, consider the following:
+1. Check or estimate the operating temperature of the oil.
+2. The viscosity of oils at their operating temperature should be close to 60
+cSt, and any variation in continuous use should remain within the range
+50–110 cSt.
+The following variation limits are permitted temporarily (but not
+constantly):
+• 110–200 cSt as a result of a low temperature peak, or
+• 30–50 cSt as a result of a high temperature peak.
+The values indicated in the tables should be considered first and
+foremost. In each case you must always make sure that the product in
+question has the required properties.</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#3</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 340</span>
+    <span><span class="tag">table</span></span>
+  </div>
+  <div class="chunk-text">Diesel hours – 500 HOURS
+Maintenance procedure				Notes
+HYDRAULIC SYSTEM		206
+Check the return pressure sensor		207
+Check the temperature sensor		207
+Replace the hydraulic oil tank breath-
+er.		208
+Replace the hydraulic oil pressure fil-
+ter		208
+Replace the hydraulic oil return filter		209
+PNEUMATIC SYSTEM		212
+Replace the air filter		213
+Replace the compressor oil filter		216
+Replace the compressor blow-out
+breather		216
+FUEL SYSTEM		223
+Replace the fuel water separator filter		224
+Replace the fuel filters		226
+Replace the fuel tank breather		229</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#4</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 Hydraulic system</span>
+    <span>📃 Page 206</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Hydraulic system
+5.10.1
+Cleaning the radiator core
+1. Turn off the engine.
+2. Check that the radiator has no damaged fins, corrosion, or dirt (grease,
+oil, insects, leaves, etc.).
+3. The radiator can be cleaned with a high-pressure washer or with
+compressed air:
+• When cleaning the radiator with a high-pressure washer, keep the
+nozzle at a safe distance and do not use too high pressure to avoid
+damaging the radiator.
+• When cleaning the radiator with compressed air, do not use a
+pressure of above 4 bar.
+4. Check the cleanliness of the radiator core by using a flashlight to point
+light through the opposite side of the core.
+If you cannot see any light through the core, there is still dirt in the core
+and it must be cleaned more thoroughly.
+206 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#5</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 210</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+5.10.8
+Cleaning the hydraulic oil receiver
+1. Clean the exterior of the hydraulic oil receiver.
+2. To facilitate cleaning, remove the breather bracket and receiver cover on
+top of the receiver.
+3. Empty the oil receiver into an oil receptacle through a draining collector.
+On the draining collector, the hydraulic oil drain cock is marked with the
+.
+symbol
+4. Clean, rinse, and dry the receiver thoroughly.
+5. Reinstall the receiver cover.
+The tightening torque for the cover mounting screws is 25 Nm. Apply
+sealing compound (Loctite 5923 or equivalent) on both sides of the
+rubber seal.
+6. Before adding oil to the receiver, make sure that the receiver is free of
+dirt and other impurities and that the drain cock is closed.
+7. Add hydraulic oil to the receiver using a filling pump.
+210 (348)</div>
+</div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<div class="question-card">
+  <div class="q-header">
+    <div class="q-num">4</div>
+    <div class="q-text">What are the biodegradable hydraulic oil recommendations?</div>
+    <div class="badge likely_match">Likely Match</div>
+  </div>
+  <div class="q-body">
+
+    <div>
+      <div class="section-label">RAG Answer</div>
+      <div class="answer-box">Answer:
+Biodegradable hydraulic oils recommended by Sandvik must meet the same high technical quality requirements as conventional mineral oils, including biodegradability, low toxicity, and environmentally friendly use and disposal. The international standard ISO 15380 specifies the requirements for these environmentally acceptable hydraulic fluids. Sandvik factory fill biodegradable oils are Shell Naturelle HFE 46 or HFE 68 (synthetic ester). The recommended water content for biodegradable hydraulic oils is less than 300 ppm. When using biodegradable oils, the guarantee is valid only if these specified oils are used. Instructions for changing biodegradable oils are provided in a dedicated manual titled "Biodegradable hydraulic oils – change instructions."
+
+Sources:
+- maintenance.pdf | DI450-DI560 TIER4 | pages 246-246
+- maintenance.pdf | DI450-DI560 TIER4 | pages 245-247</div>
+    </div>
+
+    <div>
+      <div class="section-label">Ground Truth</div>
+      <div class="ground-truth-box">For biodegradable hydraulic oils, Sandvik factory fill oils are Shell Naturelle HFE 46 or HFE 68 (synthetic ester). The recommended water content is less than 300 ppm. Oils must meet ISO 15380 standard.</div>
+    </div>
+
+    <div class="chunks-section">
+      <div class="section-label">Retrieved Source Chunks (5)</div>
+      
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#1</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 Hydraulic system</span>
+    <span>📃 Page 244</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Hydraulic system
+Oil viscosity recommendations are based on the operating temperature of
+the oil.
+Note!
+Never mix different types of hydraulic system oils. Mixing can
+damage the hydraulic components.
+The selected hydraulic oil must be high quality and must retain its
+properties in fluctuating temperature conditions. Furthermore, it should
+contain additives typical of high performance hydraulic oils.
+When choosing the viscosity of the oil to be used, the temperature of the
+drilling environment is important. Pay attention to temperature fluctuation.
+When choosing the oil, consider the following:
+1. Check or estimate the operating temperature of the oil.
+2. The viscosity of oils at their operating temperature should be close to 60
+cSt, and any variation in continuous use should remain within the range
+50–110 cSt.
+The following variation limits are permitted temporarily (but not
+constantly):
+• 110–200 cSt as a result of a low temperature peak, or
+• 30–50 cSt as a result of a high temperature peak.
+The values indicated in the tables should be considered first and
+foremost. In each case you must always make sure that the product in
+question has the required properties.</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#2</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 246</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Oils and fluids suitable for hydraulic systems are, e.g.
+• Shell Naturelle HFE (biodegradable hydraulic oil, synthetic ester)
+A recommended water content for the biodegradable hydraulic oils is &lt;300
+ppm.
+246 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#3</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 246</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+Biodegradable hydraulic oils
+Sandvik sets the same high technical quality requirements for
+biodegradable oils as are set for conventional mineral oils. In addition, the
+oils must be environmentally friendly in terms of the following quality
+requirements:
+• biodegradability
+• toxicity
+• use and disposal.
+The international standard ISO 15380 specifies the requirements for
+environmentally acceptable hydraulic fluids.
+Viscosity/temperature table
+Viscosity cSt
+(40°C)
+Operating temperature
+°C
+°F
+-30
+-22
+-20
+-4
+-10
++14
+0
++32
++10
++50
++20
++68
++30
++86
++40
++104
++50
++122
++60
++140
++70
++158
+46
+68
+Recommended temperature range
+Temporarily allowed temperature range
+Lowest permitted starting temperature
+Instructions for changing biodegradable oils are provided in the manual
+"Biodegradable hydraulic oils – change instructions".
+Note!
+When biodegradable oils (optional) are used, Sandvik factory fill oils
+are SHELL NATURELLE HFE 46 or HFE 68 (synthetic ester). The
+guarantee is valid only when these oils are used.
+Oils and fluids suitable for hydraulic systems are, e.g.
+• Shell Naturelle HFE (biodegradable hydraulic oil, synthetic ester)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#4</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 245</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+4. If the drilling conditions are such that single-grade oils do not remain
+within the given viscosity limits, choose a multigrade oil.
+5. The oil should be changed once a year unless heavy use requires more
+frequent changes. This change interval recommendation is based on the
+extent that the oil ages and gathers moisture over a one-year period.
+For arctic conditions (temperatures below –20°C), we recommend synthetic
+oils.
+Maximum permissible degree of contamination of the hydraulic fluid;
+cleanliness class 20/15/12 according to the ISO 4406 (c).
+A recommended water content for the hydraulic oils is &lt;1000 ppm.
+Hydraulic oils
+DIN 51524 part 2 HLP, ISO 6743-4 HM, DIN 51524 part 3 HVLP, ISO
+6743-4 HV
+Viscosity/temperature table
+Viscosity cSt
+(40°C)
+Operating temperature
+°C
+°F
+-30
+-22
+-20
+-4
+-10
++14
+0
++32
++10
++50
++20
++68
++30
++86
++40
++104
++50
++122
++60
++140
++70
++158
+32
+46
+68
+100
+150
+Recommended temperature range
+Temporarily allowed temperature range
+Lowest permitted starting temperature
+Oils and fluids suitable for hydraulic systems are, e.g.
+• Shell Tellus S2 V 68 (hydraulic oil)
+245 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#5</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 247</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">• Quintolubric 888-68 (Quaker Chemicals)
+Sandvik factory fill oils are totally miscible with the fluid mentioned above.
+Thus, the factory filled oil can be changed as necessary in connection with
+the rig start-up inspection without flushing the hydraulic system. Sandvik
+does not approve continuous mixing of hydraulic fluids.
+Note!
+The guarantee is valid only if the recommended fluids are used.
+Oils and fluids suitable for hydraulic systems are, e.g.
+• Fuchs Plantoflux 68-AT-S (less flammable hydraulic fluid)</div>
+</div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<div class="question-card">
+  <div class="q-header">
+    <div class="q-num">5</div>
+    <div class="q-text">What is the oil change interval for the hydraulic system?</div>
+    <div class="badge likely_match">Likely Match</div>
+  </div>
+  <div class="q-body">
+
+    <div>
+      <div class="section-label">RAG Answer</div>
+      <div class="answer-box">Answer:
+The hydraulic oil should be changed once a year under normal conditions. However, if heavy use occurs or if the oil appears light grey or dull (indicating contamination), the oil should be changed more frequently. In severe service applications or harsh environments, the oil change interval should be reduced, potentially to as low as 250 hours if oil analysis is not used. The oil must be monitored for contamination and water content, and the correct oil type and viscosity must be used to avoid damage.
+
+Sources:
+- OM SEBU9105-02.pdf | Selection of Oil Change Interval | page 90
+- maintenance.pdf | DI450-DI560 TIER4 | page 245
+- maintenance.pdf | General | page 242</div>
+    </div>
+
+    <div>
+      <div class="section-label">Ground Truth</div>
+      <div class="ground-truth-box">The hydraulic oil should be changed once a year unless heavy use requires more frequent changes. This interval is based on oil aging and moisture accumulation over a one-year period.</div>
+    </div>
+
+    <div class="chunks-section">
+      <div class="section-label">Retrieved Source Chunks (5)</div>
+      
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#1</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Selection of Oil Change Interval</span>
+    <span>📃 Page 90</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Selection of Oil Change Interval
+1. Remove the oil drain plug in order to allow the oil to
+drain.
+“Fluid Recommendations” for further information
+about oils that may be used in Caterpillar engines.
+2. After the oil has drained, the oil drain plug should
+be cleaned and installed.
+“Severe Service Application” to determine if the oil
+change interval should be reduced from the normal
+change interval. If operating in any of the conditions
+or environments outlined in the Severe Service
+Application, use S·O·S Services oil analysis to
+determine the oil change interval. If S·O·S Services
+oil analysis is not being used, the oil change interval
+should be reduced to 250 hrs.</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#2</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 342</span>
+    <span><span class="tag">table</span></span>
+  </div>
+  <div class="chunk-text">Diesel hours – 1000 HOURS
+Maintenance procedure				Notes
+BOOM		138
+Check the cradle clearances		143
+HYDRAULIC ROTATION HEAD
+HTRH6		157
+Replace the floating spindle seals and
+wearing parts		164
+Replace the flushing head seals		166
+CARRIER		170
+Change the oil in the tramming gears		173
+PNEUMATIC SYSTEM		212
+Change the compressor oil (Oil
+change interval depends on the oil
+type and on the operating conditions,
+refer to the compressor's oil recom-
+mendation)		215
+DTH HAMMER LUBRICATION DE-
+VICE		221
+Replace the oil tank breather		221
+Clean the oil receiver		221
+Check the operation of the monitoring
+unit		222</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#3</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 245</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+4. If the drilling conditions are such that single-grade oils do not remain
+within the given viscosity limits, choose a multigrade oil.
+5. The oil should be changed once a year unless heavy use requires more
+frequent changes. This change interval recommendation is based on the
+extent that the oil ages and gathers moisture over a one-year period.
+For arctic conditions (temperatures below –20°C), we recommend synthetic
+oils.
+Maximum permissible degree of contamination of the hydraulic fluid;
+cleanliness class 20/15/12 according to the ISO 4406 (c).
+A recommended water content for the hydraulic oils is &lt;1000 ppm.
+Hydraulic oils
+DIN 51524 part 2 HLP, ISO 6743-4 HM, DIN 51524 part 3 HVLP, ISO
+6743-4 HV
+Viscosity/temperature table
+Viscosity cSt
+(40°C)
+Operating temperature
+°C
+°F
+-30
+-22
+-20
+-4
+-10
++14
+0
++32
++10
++50
++20
++68
++30
++86
++40
++104
++50
++122
++60
++140
++70
++158
+32
+46
+68
+100
+150
+Recommended temperature range
+Temporarily allowed temperature range
+Lowest permitted starting temperature
+Oils and fluids suitable for hydraulic systems are, e.g.
+• Shell Tellus S2 V 68 (hydraulic oil)
+245 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#4</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 General</span>
+    <span>📃 Page 242</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Mistakes in choosing and using oil
+Components may be damaged if
+• a wrong oil type has been chosen
+• a wrong oil viscosity has been chosen
+• the recommended oil change interval is exceeded.
+Oils must be changed at certain intervals because the properties of the oil
+and its additives deteriorate and are lost as the oil ages.
+Note!
+Observe the color and clearness of the oil. Water and other
+impurities in the oil can cause malfunctions in the hydraulic system
+and serious component damage (e.g. to rock drills). If the oil is light
+grey or dull, change the oil. Find the cause of the oil impurity.
+242 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#5</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 Hydraulic system</span>
+    <span>📃 Page 244</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Hydraulic system
+Oil viscosity recommendations are based on the operating temperature of
+the oil.
+Note!
+Never mix different types of hydraulic system oils. Mixing can
+damage the hydraulic components.
+The selected hydraulic oil must be high quality and must retain its
+properties in fluctuating temperature conditions. Furthermore, it should
+contain additives typical of high performance hydraulic oils.
+When choosing the viscosity of the oil to be used, the temperature of the
+drilling environment is important. Pay attention to temperature fluctuation.
+When choosing the oil, consider the following:
+1. Check or estimate the operating temperature of the oil.
+2. The viscosity of oils at their operating temperature should be close to 60
+cSt, and any variation in continuous use should remain within the range
+50–110 cSt.
+The following variation limits are permitted temporarily (but not
+constantly):
+• 110–200 cSt as a result of a low temperature peak, or
+• 30–50 cSt as a result of a high temperature peak.
+The values indicated in the tables should be considered first and
+foremost. In each case you must always make sure that the product in
+question has the required properties.</div>
+</div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<div class="question-card">
+  <div class="q-header">
+    <div class="q-num">6</div>
+    <div class="q-text">What is the engine oil change interval for normal service?</div>
+    <div class="badge likely_match">Likely Match</div>
+  </div>
+  <div class="q-body">
+
+    <div>
+      <div class="section-label">RAG Answer</div>
+      <div class="answer-box">Answer:
+The engine oil change interval for normal service is 500 hours.
+
+Sources:
+- OM SEBU9105-02.pdf | Obtain the Sample and the Analysis | pages 89-90
+- OM SEBU9105-02.pdf | Selection of Oil Change Interval | page 90</div>
+    </div>
+
+    <div>
+      <div class="section-label">Ground Truth</div>
+      <div class="ground-truth-box">For normal service using Cat DEO-ULS or oils meeting Cat ECF-3 or API CJ-4 with a minimum TBN of 8, the oil change interval is every 500 hours.</div>
+    </div>
+
+    <div class="chunks-section">
+      <div class="section-label">Retrieved Source Chunks (5)</div>
+      
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#1</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Selection of Oil Change Interval</span>
+    <span>📃 Page 90</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Selection of Oil Change Interval
+1. Remove the oil drain plug in order to allow the oil to
+drain.
+“Fluid Recommendations” for further information
+about oils that may be used in Caterpillar engines.
+2. After the oil has drained, the oil drain plug should
+be cleaned and installed.
+“Severe Service Application” to determine if the oil
+change interval should be reduced from the normal
+change interval. If operating in any of the conditions
+or environments outlined in the Severe Service
+Application, use S·O·S Services oil analysis to
+determine the oil change interval. If S·O·S Services
+oil analysis is not being used, the oil change interval
+should be reduced to 250 hrs.</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#2</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Obtain the Sample and the Analysis</span>
+    <span>📃 Page 89–90</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">obtained during normal engine operation.
+Table 13
+Oil Change Interval (1)
+Multigrade Oil Type
+Operating Conditions
+Normal
+Severe Service
+Application
+The 169-8373 Fluid Sampling Bottle is
+recommended for use with the sampling valve. The
+fluid sampling bottle includes the parts that are
+needed for obtaining oil samples. Instructions are
+also provided.
+Cat DEO-ULS
+Preferred
+500 hr
+250 hr
+500 hr
+250 hr
+Oil meeting the requirements
+of the Cat ECF-3 Specifica-
+tion or the API CJ-4
+classification
+8 minimum TBN
+Preferred
+NOTICE
+Always use a designated pump for oil sampling, and
+use a separate designated pump for coolant sam-
+pling. Using the same pump for both types of samples
+may contaminate the samples that are being drawn.
+This contaminate may cause a false analysis and an
+incorrect interpretation that could lead to concerns by
+both dealers and customers.
+Oil meeting the requirements
+of the ACEA C9/E6
+Specification
+TBN below 10.4
+500 hr
+250 hr
+(1) Refer to Special Publication, PEHJ0192, “Optimizing Oil
+Change Intervals” for further information..
+If the engine is not equipped with a sampling valve,
+use the 1U-5718 Vacuum Pump. The pump is
+designed to accept sampling bottles. Disposable</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#3</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Maintenance Interval Schedule</span>
+    <span>📃 Page 61</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Maintenance Interval Schedule
+“Engine Air Cleaner Service Indicator - Inspect” .....88
+“Engine Oil Level - Check”.......................................88
+SMCS Code: 1000; 4450; 7500
+“Fuel System Primary Filter/Water Separator -
+Drain”.......................................................................93
+Ensure that all safety information, warnings, and
+instructions are read and understood before any
+operation or any maintenance procedures are
+performed. The user is responsible for the
+performance of all maintenance including the
+following procedures: all adjustments, the use of
+proper lubricants, fluids, filters and the installation of
+new components due to normal wear and aging . The
+performance of this product may be diminished if
+proper maintenance intervals and procedures are not
+followed. Components may experience accelerated
+wear if proper maintenance intervals and procedures
+are not followed.
+“Power Take-Off Clutch - Check”.......................... 103
+“Walk-Around Inspection”..................................... 104</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#4</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Obtain the Sample and the Analysis</span>
+    <span>📃 Page 89–90</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">the last oil change
+•
+The amount of oil that has been added since the
+last oil change
+Excessive oil consumption will cause deposits to form
+on the pistons and in the combustion chamber. De-
+posits in the combustion chamber lead to the follow-
+ing problems: guttering of the valves, packing of
+carbon under the piston rings and wear of the cylinder
+liner.
+To ensure that the sample is representative of the oil
+in the crankcase, obtain a warm, mixed oil sample.
+To avoid contamination of the oil samples, the tools
+and the supplies that are used for obtaining oil
+samples must be clean.
+If the oil level is above the “ FULL ” mark on the oil lev-
+el gauge, drain some of the oil immediately.
+90
+SEBU9105
+Maintenance Recommendations
+Engine Oil and Filter - Change
+Caterpillar recommends using the sampling valve in
+order to obtain oil samples. The quality and the
+consistency of the samples are better when the
+sampling valve is used. The location of the sampling
+valve allows oil that is flowing under pressure to be
+obtained during normal engine operation.
+Table 13
+Oil Change Interval (1)
+Multigrade Oil Type
+Operating Conditions
+Normal
+Severe Service
+Application</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#5</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Test the Service Indicator</span>
+    <span>📃 Page 88–89</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Test the Service Indicator
+Service indicators are important instruments.
+•
+Check for ease of resetting. The service indicator
+should reset in less than three pushes.
+•
+Check the movement of the yellow core when the
+engine is accelerated to the engine rated speed.
+The yellow core should latch approximately at the
+greatest vacuum that is attained.
+SEBU9105
+89
+Maintenance Recommendations
+Engine Oil Sample - Obtain
+1. Remove the oil filler cap and check the oil level.
+Maintain the oil level between the “ ADD ” mark (Y)
+and the “ FULL ” mark (X) on the oil level gauge
+(1). Do not fill the crankcase above “ FULL ” mark
+(X).
+2. In order to choose the correct type of oil for this
+engine, refer to this Operation and Maintenance
+Manual, “Fluid Recommendations”.
+3. Clean the oil filler cap. Install the oil filler cap.
+4. Record the amount of oil that is added. For the next
+oil sample and analysis, include the total amount of
+oil that has been added since the previous sample.
+Recording this information helps to provide the
+most accurate oil analysis.
+Illustration 96
+g02455244
+Typical installation of the oil level gauge
+(1) Oil filler cap
+(2) Oil level gauge
+i04237495</div>
+</div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<div class="question-card">
+  <div class="q-header">
+    <div class="q-num">7</div>
+    <div class="q-text">What is the engine oil change interval for severe service?</div>
+    <div class="badge likely_match">Likely Match</div>
+  </div>
+  <div class="q-body">
+
+    <div>
+      <div class="section-label">RAG Answer</div>
+      <div class="answer-box">Answer:
+For severe service applications, the engine oil change interval should be reduced to 250 hours if S·O·S Services oil analysis is not used. If oil analysis is used, the interval can be determined based on the analysis results. This applies to oils meeting Cat DEO-ULS, Cat ECF-3, API CJ-4, or ACEA C9/E6 specifications.
+
+Sources:
+- OM SEBU9105-02.pdf | Selection of Oil Change Interval | page 90
+- OM SEBU9105-02.pdf | Obtain the Sample and the Analysis | pages 89-90</div>
+    </div>
+
+    <div>
+      <div class="section-label">Ground Truth</div>
+      <div class="ground-truth-box">For severe service, the oil change interval is every 250 hours when using Cat DEO-ULS or oils meeting Cat ECF-3 or API CJ-4 specifications.</div>
+    </div>
+
+    <div class="chunks-section">
+      <div class="section-label">Retrieved Source Chunks (5)</div>
+      
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#1</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Selection of Oil Change Interval</span>
+    <span>📃 Page 90</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Selection of Oil Change Interval
+1. Remove the oil drain plug in order to allow the oil to
+drain.
+“Fluid Recommendations” for further information
+about oils that may be used in Caterpillar engines.
+2. After the oil has drained, the oil drain plug should
+be cleaned and installed.
+“Severe Service Application” to determine if the oil
+change interval should be reduced from the normal
+change interval. If operating in any of the conditions
+or environments outlined in the Severe Service
+Application, use S·O·S Services oil analysis to
+determine the oil change interval. If S·O·S Services
+oil analysis is not being used, the oil change interval
+should be reduced to 250 hrs.</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#2</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Obtain the Sample and the Analysis</span>
+    <span>📃 Page 89–90</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">obtained during normal engine operation.
+Table 13
+Oil Change Interval (1)
+Multigrade Oil Type
+Operating Conditions
+Normal
+Severe Service
+Application
+The 169-8373 Fluid Sampling Bottle is
+recommended for use with the sampling valve. The
+fluid sampling bottle includes the parts that are
+needed for obtaining oil samples. Instructions are
+also provided.
+Cat DEO-ULS
+Preferred
+500 hr
+250 hr
+500 hr
+250 hr
+Oil meeting the requirements
+of the Cat ECF-3 Specifica-
+tion or the API CJ-4
+classification
+8 minimum TBN
+Preferred
+NOTICE
+Always use a designated pump for oil sampling, and
+use a separate designated pump for coolant sam-
+pling. Using the same pump for both types of samples
+may contaminate the samples that are being drawn.
+This contaminate may cause a false analysis and an
+incorrect interpretation that could lead to concerns by
+both dealers and customers.
+Oil meeting the requirements
+of the ACEA C9/E6
+Specification
+TBN below 10.4
+500 hr
+250 hr
+(1) Refer to Special Publication, PEHJ0192, “Optimizing Oil
+Change Intervals” for further information..
+If the engine is not equipped with a sampling valve,
+use the 1U-5718 Vacuum Pump. The pump is
+designed to accept sampling bottles. Disposable</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#3</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Obtain the Sample and the Analysis</span>
+    <span>📃 Page 89–90</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">the last oil change
+•
+The amount of oil that has been added since the
+last oil change
+Excessive oil consumption will cause deposits to form
+on the pistons and in the combustion chamber. De-
+posits in the combustion chamber lead to the follow-
+ing problems: guttering of the valves, packing of
+carbon under the piston rings and wear of the cylinder
+liner.
+To ensure that the sample is representative of the oil
+in the crankcase, obtain a warm, mixed oil sample.
+To avoid contamination of the oil samples, the tools
+and the supplies that are used for obtaining oil
+samples must be clean.
+If the oil level is above the “ FULL ” mark on the oil lev-
+el gauge, drain some of the oil immediately.
+90
+SEBU9105
+Maintenance Recommendations
+Engine Oil and Filter - Change
+Caterpillar recommends using the sampling valve in
+order to obtain oil samples. The quality and the
+consistency of the samples are better when the
+sampling valve is used. The location of the sampling
+valve allows oil that is flowing under pressure to be
+obtained during normal engine operation.
+Table 13
+Oil Change Interval (1)
+Multigrade Oil Type
+Operating Conditions
+Normal
+Severe Service
+Application</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#4</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Maintenance Interval Schedule</span>
+    <span>📃 Page 61</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Maintenance Interval Schedule
+“Engine Air Cleaner Service Indicator - Inspect” .....88
+“Engine Oil Level - Check”.......................................88
+SMCS Code: 1000; 4450; 7500
+“Fuel System Primary Filter/Water Separator -
+Drain”.......................................................................93
+Ensure that all safety information, warnings, and
+instructions are read and understood before any
+operation or any maintenance procedures are
+performed. The user is responsible for the
+performance of all maintenance including the
+following procedures: all adjustments, the use of
+proper lubricants, fluids, filters and the installation of
+new components due to normal wear and aging . The
+performance of this product may be diminished if
+proper maintenance intervals and procedures are not
+followed. Components may experience accelerated
+wear if proper maintenance intervals and procedures
+are not followed.
+“Power Take-Off Clutch - Check”.......................... 103
+“Walk-Around Inspection”..................................... 104</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#5</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Test the Service Indicator</span>
+    <span>📃 Page 88–89</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Test the Service Indicator
+Service indicators are important instruments.
+•
+Check for ease of resetting. The service indicator
+should reset in less than three pushes.
+•
+Check the movement of the yellow core when the
+engine is accelerated to the engine rated speed.
+The yellow core should latch approximately at the
+greatest vacuum that is attained.
+SEBU9105
+89
+Maintenance Recommendations
+Engine Oil Sample - Obtain
+1. Remove the oil filler cap and check the oil level.
+Maintain the oil level between the “ ADD ” mark (Y)
+and the “ FULL ” mark (X) on the oil level gauge
+(1). Do not fill the crankcase above “ FULL ” mark
+(X).
+2. In order to choose the correct type of oil for this
+engine, refer to this Operation and Maintenance
+Manual, “Fluid Recommendations”.
+3. Clean the oil filler cap. Install the oil filler cap.
+4. Record the amount of oil that is added. For the next
+oil sample and analysis, include the total amount of
+oil that has been added since the previous sample.
+Recording this information helps to provide the
+most accurate oil analysis.
+Illustration 96
+g02455244
+Typical installation of the oil level gauge
+(1) Oil filler cap
+(2) Oil level gauge
+i04237495</div>
+</div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<div class="question-card">
+  <div class="q-header">
+    <div class="q-num">8</div>
+    <div class="q-text">What type of coolant is recommended for the engine?</div>
+    <div class="badge possible_miss">Possible Miss</div>
+  </div>
+  <div class="q-body">
+
+    <div>
+      <div class="section-label">RAG Answer</div>
+      <div class="answer-box">Answer:
+The recommended engine coolant is a mixture of water and corrosion prevention agents/anti-freeze agent. The mixture must be used year-round to prevent corrosion and elevate the boiling point. It is important to use corrosion preventing agents/anti-freeze agents specified by the engine manufacturer's manual and not to mix different coolants to avoid clogging and engine damage.
+
+Sources:
+- maintenance.pdf | Engine coolant | page 257</div>
+    </div>
+
+    <div>
+      <div class="section-label">Ground Truth</div>
+      <div class="ground-truth-box">Cat ELC (Extended Life Coolant) or a coolant meeting the Cat EC-1 specification is recommended. The coolant change interval is 6000 hours or 6 years for ELC.</div>
+    </div>
+
+    <div class="chunks-section">
+      <div class="section-label">Retrieved Source Chunks (5)</div>
+      
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#1</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 Engine coolant</span>
+    <span>📃 Page 257</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Engine coolant
+Caterpillar engines
+Engine coolant is a mixture of water and corrosion prevention agents / anti-
+freeze agent. To prevent corrosion and to elevate the boiling point of the
+coolant, the mixture must be used in the cooling system throughout the
+year.
+When choosing the corrosion preventing agents / anti-freeze agent for the
+engine coolant, refer to the engine manufacturer's manual.
+Engine coolant must be changed at certain intervals. The characteristics of
+the coolant and its additives weaken and are lost as the coolant ages.
+Refer to the engine manufacturer's manual.
+PROPERTY DAMAGE RISK!
+Mixing coolants can lead to clogging the cooler's duct and seriously
+damage the engine.
+Do not mix different coolants.</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#2</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Coolant (ELC) - Change</span>
+    <span>📃 Page 72–73</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Coolant (ELC) - Change
+Pressurized System: Hot coolant can cause seri-
+ous burns. To open the cooling system filler cap,
+stop the engine and wait until the cooling system
+components are cool. Loosen the cooling system
+pressure cap slowly in order to relieve the
+pressure.
+SMCS Code: 1350-070; 1395-044
+Clean the cooling system and flush the cooling
+system before the recommended maintenance
+interval if the following conditions exist:
+1. Stop the engine and allow the engine to cool.
+Loosen the cooling system filler cap slowly in order
+to relieve any pressure. Remove the cooling
+system filler cap.
+•
+The engine overheats frequently.
+•
+Foaming is observed.
+•
+The oil has entered the cooling system and the
+coolant is contaminated.
+2. Open the cooling system drain valve.
+Allow the coolant to drain.
+•
+The fuel has entered the cooling system and the
+coolant is contaminated.
+SEBU9105
+73
+Maintenance Recommendations
+Coolant Extender (ELC) - Add
+NOTICE
+Dispose of used engine coolant properly or recycle.
+Various methods have been proposed to reclaim used
+coolant for reuse in engine cooling systems. The full
+distillation procedure is the only method acceptable</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#3</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Starting the Engine</span>
+    <span>📃 Page 40–41</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Starting the Engine
+Refer to the Owner's Manual of the OEM for your type
+of controls. Use the following procedure to start the
+engine.
+1. Place the transmission in NEUTRAL. Disengage
+the flywheel clutch in order to allow the engine to
+start faster, and to reduce the draining of the
+battery.
+2. Turn the ignition switch to the ON position.
+SEBU9105
+41
+Engine Starting
+Starting with Jump Start Cables
+If the engine is operated with a low load, the engine
+will reach normal operating temperature sooner than
+idling the engine with no load. When the engine is
+idled in cold weather, increase the engine rpm to
+approximately 1000 to 1200 rpm in order to warm up
+the engine more quickly. Do not exceed the
+recommended rpm in order to increase the speed of
+the warm-up. Limit unnecessary idle time to 10
+minutes.
+2. If a wire is loose, push the wire back into the
+connector. Pull the wire again in order to ensure
+that the wire is secure.
+3. Start the engine. If the engine does not start,
+consult the nearest Caterpillar dealer for
+assistance.
+i04292191</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#4</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 of SCA in the Coolant</span>
+    <span>📃 Page 77</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">concentration of 3 percent to 6 percent SCA in the
+coolant.
+5. Clean the cooling system filler cap. Install the
+cooling system filler cap.
+For further information, refer to Special Publication,
+SEBU6251, “Cat Commercial Diesel Engine Fluids
+Recommendations”.
+i05698174</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#5</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 for Loose Connections</span>
+    <span>📃 Page 104</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">be less than 275 kPa (40 psi). Use pressurized water
+in order to soften mud. Clean the core from both
+sides.
+•
+Wipe all caps and plugs before the engine is
+serviced in order to reduce the chance of system
+contamination.
+Use a degreaser and steam for removal of oil and
+grease. Clean both sides of the core. Wash the core
+with detergent and hot water. Thoroughly rinse the
+core with clean water.
+NOTICE
+For any type of leak (coolant, lube, or fuel) clean up
+the fluid. If leaking is observed, find the source and
+correct the leak. If leaking is suspected, check the flu-
+id levels more often than recommended until the leak
+is found or fixed, or until the suspicion of a leak is
+proved to be unwarranted.
+After cleaning, start the engine and accelerate the
+engine to high idle rpm. This procedure will help in the
+removal of debris and drying of the core. Stop the
+engine. Use a light bulb behind the core in order to
+inspect the core for cleanliness. Repeat the cleaning,
+if necessary.
+NOTICE
+Accumulated grease and/or oil on an engine or deck
+is a fire hazard. Remove this debris with steam clean-
+ing or high pressure water.
+Inspect the fins for damage. Bent fins may be opened</div>
+</div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<div class="question-card">
+  <div class="q-header">
+    <div class="q-num">9</div>
+    <div class="q-text">What is the air filter service interval?</div>
+    <div class="badge likely_match">Likely Match</div>
+  </div>
+  <div class="q-body">
+
+    <div>
+      <div class="section-label">RAG Answer</div>
+      <div class="answer-box">Answer:
+The air cleaner element should be inspected before the air filter restriction reaches 2.5 kPa (10 inches of H2O) and must be cleaned or replaced before the restriction exceeds 3.75 kPa (15 inches of H2O). The secondary air cleaner element should be discarded for every three cleanings of the primary element. The air cleaner element may be cleaned up to six times if properly maintained and should be replaced at least once per year. Service the primary filter element only when the intake air filter alert indicator is flashing. Operating conditions may require more frequent service.
+
+Sources:
+- OM SEBU9105-02.pdf | Inspecting Air Cleaner Elements | page 87
+- OM SEBU9105-02.pdf | Servicing the Air Cleaner Elements | pages 84-85
+- OM SEBU9105-02.pdf | Primary Filter | page 82</div>
+    </div>
+
+    <div>
+      <div class="section-label">Ground Truth</div>
+      <div class="ground-truth-box">The air filter should be inspected and serviced when the air filter indicator shows a restriction, or at every 500 hour maintenance interval, whichever comes first.</div>
+    </div>
+
+    <div class="chunks-section">
+      <div class="section-label">Retrieved Source Chunks (5)</div>
+      
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#1</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Primary Filter</span>
+    <span>📃 Page 82</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Primary Filter
+NOTICE
+Service the primary filter element only when the alert
+indicator for the intake air filter is flashing. Do not
+open the filter compartment unless it is time for serv-
+ice. Opening the filter compartment can cause dirt to
+get into the clean side of the filter housing.
+i01646701</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#2</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Maintenance Interval Schedule</span>
+    <span>📃 Page 61</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Maintenance Interval Schedule
+“Engine Air Cleaner Service Indicator - Inspect” .....88
+“Engine Oil Level - Check”.......................................88
+SMCS Code: 1000; 4450; 7500
+“Fuel System Primary Filter/Water Separator -
+Drain”.......................................................................93
+Ensure that all safety information, warnings, and
+instructions are read and understood before any
+operation or any maintenance procedures are
+performed. The user is responsible for the
+performance of all maintenance including the
+following procedures: all adjustments, the use of
+proper lubricants, fluids, filters and the installation of
+new components due to normal wear and aging . The
+performance of this product may be diminished if
+proper maintenance intervals and procedures are not
+followed. Components may experience accelerated
+wear if proper maintenance intervals and procedures
+are not followed.
+“Power Take-Off Clutch - Check”.......................... 103
+“Walk-Around Inspection”..................................... 104</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#3</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Inspecting Air Cleaner Elements</span>
+    <span>📃 Page 87</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Inspecting Air Cleaner Elements
+Clean the air cleaner elements or replace the air
+cleaner elements when the following conditions
+occur:
+•
+Inspect the air cleaner elements before the air filter
+restriction reaches 2.5 kPa (10 inches of H 2 O). A
+loss of engine performance may occur when the
+air filter restriction exceeds this limit.
+•
+The air cleaner elements must be cleaned or
+replaced before the air filter restriction exceeds
+3.75 kPa (15 inches of H 2 O).
+Note: The air filter restriction is measured before the
+air inlet to the turbocharger compressor.</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#4</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Servicing the Air Cleaner Elements</span>
+    <span>📃 Page 84–85</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Servicing the Air Cleaner Elements
+If the air cleaner element becomes plugged, the air
+can split the material of the air cleaner element.
+Unfiltered air will drastically accelerate internal engine
+wear. Your Cat dealer has the proper air cleaner
+elements for your application. Consult your Cat
+dealer for the correct air cleaner element.
+Illustration 89
+g00736431
+(1) Cover
+(2) Primary air cleaner element
+(3) Secondary air cleaner element
+(4) Air inlet for the turbocharger
+•
+Check the precleaner (if equipped) daily for
+accumulation of dirt and debris. Remove any dirt
+and debris, as needed.
+1. Remove the cover. Remove the primary air cleaner
+element.
+•
+Operating conditions (dust, dirt, and debris) may
+require more frequent service of the air cleaner
+element.
+2. The secondary air cleaner element should be
+removed and discarded for every three cleanings
+of the primary air cleaner element.
+•
+The air cleaner element may be cleaned up to six
+times if the element has been properly cleaned
+and inspected.
+Note: Refer to “Cleaning the Primary Air Cleaner
+Elements”.
+•
+The air cleaner element should be replaced at
+least one time per year. This replacement should</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#5</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Every 10 000 Service Hours</span>
+    <span>📃 Page 62</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Every 10 000 Service Hours
+“Engine Air Cleaner Element (Dual Element/Canister
+Type) - Clean/Replace”............................................84
+“DEF Filter (Sock) - Replace” ..................................78
+“Engine Air Cleaner Element (Single Element/
+Canister Type) - Clean/Replace”.............................86</div>
+</div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<div class="question-card">
+  <div class="q-header">
+    <div class="q-num">10</div>
+    <div class="q-text">What fuel filter replacement interval is recommended?</div>
+    <div class="badge partial_match">Partial Match</div>
+  </div>
+  <div class="q-body">
+
+    <div>
+      <div class="section-label">RAG Answer</div>
+      <div class="answer-box">Answer:
+The retrieved context does not specify a recommended fuel filter replacement interval.
+
+Sources:
+- OM SEBU9105-02.pdf | Maintenance Interval Schedule | page 61
+- OM SEBU9105-02.pdf | Fuel Tank | page 95
+- OM SEBU9105-02.pdf | Severe Operating Conditions | pages 60-61</div>
+    </div>
+
+    <div>
+      <div class="section-label">Ground Truth</div>
+      <div class="ground-truth-box">Fuel filters should be replaced every 500 hours as part of the scheduled maintenance procedure.</div>
+    </div>
+
+    <div class="chunks-section">
+      <div class="section-label">Retrieved Source Chunks (5)</div>
+      
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#1</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Check</span>
+    <span>📃 Page 91</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Check
+1. Remove the oil filter with a 185-3630 Strap
+Wrench.
+2. Clean the sealing surface of the filter mounting
+base. Ensure that all of the old oil filter gasket is
+removed.
+SMCS Code: 1000-535
+The oil change interval may be extended to 12
+months for a vehicle that is operated seasonally and
+placed in storage for the remainder of the year by
+using the required storage procedures and the
+required start-up procedures. This extension is
+permitted if the following categories for oil change
+“Maintenance Interval Schedule” have not been
+reached:
+3. Apply clean engine oil to the new oil filter gasket.
+NOTICE
+Do not fill the oil filters with oil before installing them.
+This oil would not be filtered and could be contami-
+nated. Contaminated oil can cause accelerated wear
+to engine components.
+•
+Mileage
+4. Install the oil filter. Tighten the oil filter until the oil
+filter gasket contacts the base. Tighten the oil filter
+by hand according to the instructions that are
+shown on the oil filter. Do not overtighten the oil
+filter.
+•
+Operating hours
+•
+Fuel consumption
+If an engine is out of operation and if use of the
+engine is not planned, special precautions should be</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#2</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Fuel Tank</span>
+    <span>📃 Page 95</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Fuel Tank
+NOTICE
+Do not fill the secondary fuel filter with fuel before in-
+stalling. The fuel would not be filtered and could be
+contaminated. Contaminated fuel will cause acceler-
+ated wear to fuel system parts.
+Fuel quality is critical to the performance and to the
+service life of the engine. Water in the fuel can cause
+excessive wear to the fuel system. Condensation
+occurs during the heating and cooling of fuel. The
+condensation occurs as the fuel passes through the
+fuel system and the fuel returns to the fuel tank. This
+causes water to accumulate in fuel tanks. Draining
+the fuel tank regularly and obtaining fuel from reliable
+sources can help to eliminate water in the fuel.
+NOTICE
+In order to meet expected fuel system component life,
+4 micron(c) absolute or less secondary fuel filtration is
+required for all Caterpillar
+Diesel Engines that are
+equipped with unit injected fuel systems. Note that all
+current
+Caterpillar
+Diesel
+Engines
+are
+factory
+equipped with Caterpillar Advanced Efficiency 4 mi-
+cron(c) absolute fuel filters.</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#3</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Maintenance Interval Schedule</span>
+    <span>📃 Page 61</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Maintenance Interval Schedule
+“Engine Air Cleaner Service Indicator - Inspect” .....88
+“Engine Oil Level - Check”.......................................88
+SMCS Code: 1000; 4450; 7500
+“Fuel System Primary Filter/Water Separator -
+Drain”.......................................................................93
+Ensure that all safety information, warnings, and
+instructions are read and understood before any
+operation or any maintenance procedures are
+performed. The user is responsible for the
+performance of all maintenance including the
+following procedures: all adjustments, the use of
+proper lubricants, fluids, filters and the installation of
+new components due to normal wear and aging . The
+performance of this product may be diminished if
+proper maintenance intervals and procedures are not
+followed. Components may experience accelerated
+wear if proper maintenance intervals and procedures
+are not followed.
+“Power Take-Off Clutch - Check”.......................... 103
+“Walk-Around Inspection”..................................... 104</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#4</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Severe Operating Conditions</span>
+    <span>📃 Page 60–61</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Severe Operating Conditions
+•
+Frequent operation with inlet air which has a
+corrosive content
+•
+Operation with inlet air which has a combustible
+content
+•
+Inadequate maintenance of fuel storage tanks from
+causes such as excessive water, sediment, and
+microorganism growth.
+•
+Operation which is outside of the intended
+application
+•
+Extending maintenance intervals beyond the
+recommended intervals
+•
+Operation with a plugged fuel filter
+•
+Extended operation at low idle (more than 20% of
+hours)
+•
+Using fluids which are not recommended in
+Special Publication, SEBU6251, “Cat Commercial
+Diesel Engine Fluids Recommendations”
+•
+Frequent cold starts at temperatures below 0° C
+(32° F)
+•
+Extending maintenance intervals for changing the
+engine oil and engine coolant without S·O·S
+validation
+•
+Frequent dry starts (starting after more than 72
+hours of shutdown)
+•
+Extending maintenance intervals for changing air
+filters, oil filters, and fuel filters
+•
+Frequent hot shutdowns (shutting down the engine
+without the minimum of 2 minutes to 5 minutes of
+cool down time)
+•
+Failure to use a water separator
+•
+Operation above the engine rated speed
+•
+Using filters which are not recommended by</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#5</strong></span>
+    <span>📄 PM SEBP6451-07-02.pdf</span>
+    <span>📌 1</span>
+    <span>📃 Page 106</span>
+    <span><span class="tag">table</span></span>
+  </div>
+  <div class="chunk-text">FFUUEELL SSYYSSTTEEMM
+123-0783 VALVE GP-FLUID SAMPLING
+QUICK DISCONNECT FUEL CONNECTION
+PART OF 343-8126 BASE GP-FUEL FILTER
+ALSO AN ATTACHMENT
+SMCS-7542 i04900946
+RREEFF GGRRAAPPHHIICC PPAARRTT NNAAMMEE SSEEEE
+NNOOTTEE NNOO RREEFF PPAARRTT NNUUMMBBEERR QQTTYY 1 2 3 4 5 6 (PRODUCTLEVEL) PPAAGGEE
+1 1 164-5567 1 COUPLER AS-QUICK DISCONNECT (MALE)
+1 6V-3965 1 FITTING (QUICK DISCONNECT)
+1 214-7568 1 SEAL-O-RING
+2 1 6V-0852 1 CAP-DUST (FUEL)
+GRAPHIC #1 &lt;&lt;EENNDD&gt;&gt; g02978837</div>
+</div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<div class="question-card">
+  <div class="q-header">
+    <div class="q-num">11</div>
+    <div class="q-text">What compressor oil change interval is recommended?</div>
+    <div class="badge likely_match">Likely Match</div>
+  </div>
+  <div class="q-body">
+
+    <div>
+      <div class="section-label">RAG Answer</div>
+      <div class="answer-box">Answer:
+The compressor oil change interval depends on ambient temperature, atmospheric humidity, and oil type. For severe service or if oil analysis (S·O·S Services) is not used, the oil change interval should be reduced to 250 hours. In general, oil change intervals vary with viscosity and environmental conditions, with a minimum of at least once a year recommended. Specific intervals are provided in tables based on viscosity and humidity, but exact values are not fully detailed in the provided context.
+
+Sources:
+- OM SEBU9105-02.pdf | Selection of Oil Change Interval | p. 90
+- maintenance.pdf | Compressor | p. 250
+- maintenance.pdf | DI450-DI560 TIER4 | p. 251
+- maintenance.pdf | DI450-DI560 TIER4 | p. 342</div>
+    </div>
+
+    <div>
+      <div class="section-label">Ground Truth</div>
+      <div class="ground-truth-box">The compressor oil change interval depends on the oil type and operating conditions. Refer to the compressor oil recommendation for the specific interval.</div>
+    </div>
+
+    <div class="chunks-section">
+      <div class="section-label">Retrieved Source Chunks (5)</div>
+      
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#1</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Selection of Oil Change Interval</span>
+    <span>📃 Page 90</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Selection of Oil Change Interval
+1. Remove the oil drain plug in order to allow the oil to
+drain.
+“Fluid Recommendations” for further information
+about oils that may be used in Caterpillar engines.
+2. After the oil has drained, the oil drain plug should
+be cleaned and installed.
+“Severe Service Application” to determine if the oil
+change interval should be reduced from the normal
+change interval. If operating in any of the conditions
+or environments outlined in the Severe Service
+Application, use S·O·S Services oil analysis to
+determine the oil change interval. If S·O·S Services
+oil analysis is not being used, the oil change interval
+should be reduced to 250 hrs.</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#2</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 Compressor</span>
+    <span>📃 Page 250</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Compressor
+GHH two-stage compressors
+Only PAO -synthetic compressor oils are allowed to be used in GHH-Rand
+two-stage compressors. Warranty is not valid if other types of oils are used!
+Ambient temperature and atmospheric humidity are the most important
+factors in choosing the oil. In case your local conditions differ from the
+conditions of the recommendation contact DTH -product support.
+DTH surface drill users are encouraged to participate in an oil analysis
+program with the oil supplier. This may result in an oil change interval
+different than stated below.
+Note!
+Mixing synthetic oils with ATF may lead to operational problems
+such as foaming and clogging. Do not mix different types of oils!
+Operation temperature of the compressor must always be higher than dew
+point; otherwise water is not separated from the system.
+In general the compressor operation temperature must be 65 to 70 °C
+above the ambient temperature but not exceeding 110 °C (120°C in
+exceptional cases).
+The tables below show recommended oil according to temperature and oil
+changing intervals. The oil changing intervals depend on ambient
+temperature and atmospheric humidity.
+Viscosi-
+ty
+cSt
+(40°C)
+Change
+interval
+h</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#3</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 251</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+Viscosi-
+ty
+cSt
+(40°C)
+Change
+interval
+h
+High humidity (&gt; 80 %) areas
+Ambient temperature
+5
+* at least once a year
+Recommended temperature range
+Some examples of recommended oils (only these or equivalent oils can be
+used):
+• GHH-Rand Primecool Plus 46 / 68 / 100 / 150
+• Aral Motanol SPA 46 / 68 / 100
+• Castrol SHL (PAO) 46 / 68 / 100
+• Mobil Rarus SHC 1025 / 1026
+• BP Enersyn RC-S 46 / 68
+• Texaco Cetus PAO 46 / 68 / 100
+• Exxon Teresstic SHP 46 / 68 / 100
+• Shell Corena S4 R 46/68
+Enclosed is a specification sheet of a suitable oil; equivalent oil can be
+chosen accordingly. Even if the commercial name of the oil is same as in
+the list above we recommend to compare the specifications as oils can vary
+in different parts of the world!
+Specifications of typical recommended synthetic compressor oils
+Product name
+Property
+Unit
+32
+46
+68
+100
+150
+Test
+method
+ISO VG
+-
+32
+46
+68
+100
+150
+DIN 51
+519
+Foaming,
+Seq. I: 24 °C
+ml
+0/0
+0/0
+0/0
+0/0
+0/0
+ASTM D
+892
+Seq. II: 93,5 °C
+ml
+0/0
+0/0
+0/0
+5/0
+5/0
+ASTM D
+892
+251 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#4</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 342</span>
+    <span><span class="tag">table</span></span>
+  </div>
+  <div class="chunk-text">Diesel hours – 1000 HOURS
+Maintenance procedure				Notes
+BOOM		138
+Check the cradle clearances		143
+HYDRAULIC ROTATION HEAD
+HTRH6		157
+Replace the floating spindle seals and
+wearing parts		164
+Replace the flushing head seals		166
+CARRIER		170
+Change the oil in the tramming gears		173
+PNEUMATIC SYSTEM		212
+Change the compressor oil (Oil
+change interval depends on the oil
+type and on the operating conditions,
+refer to the compressor's oil recom-
+mendation)		215
+DTH HAMMER LUBRICATION DE-
+VICE		221
+Replace the oil tank breather		221
+Clean the oil receiver		221
+Check the operation of the monitoring
+unit		222</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#5</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 Compressor</span>
+    <span>📃 Page 250</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">changing intervals. The oil changing intervals depend on ambient
+temperature and atmospheric humidity.
+Viscosi-
+ty
+cSt
+(40°C)
+Change
+interval
+h
+Low humidity (&lt; 80 %) areas
+Ambient temperature
+* at least once a year
+Recommended temperature range
+250 (348)</div>
+</div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<div class="question-card">
+  <div class="q-header">
+    <div class="q-num">12</div>
+    <div class="q-text">What is the recommended oil for tramming gears?</div>
+    <div class="badge partial_match">Partial Match</div>
+  </div>
+  <div class="q-body">
+
+    <div>
+      <div class="section-label">RAG Answer</div>
+      <div class="answer-box">Answer:
+The recommended oil for tramming gears is Rexroth GFT 24 for the DI450-DI560 TIER4 series. For the correct oil grade, refer to the "Lubricants and capacities" section of the manual.
+
+Sources:
+- maintenance.pdf | DI450-DI560 TIER4 | pages 173-174</div>
+    </div>
+
+    <div>
+      <div class="section-label">Ground Truth</div>
+      <div class="ground-truth-box">The oil in tramming gears should be changed every 1000 hours.</div>
+    </div>
+
+    <div class="chunks-section">
+      <div class="section-label">Retrieved Source Chunks (5)</div>
+      
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#1</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 174</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+5.7.8
+Changing the tramming gear oil, Rexroth GFT 24
+For the correct oil grade, refer to the "Lubricants and capacities" section.
+2
+1
+3
+1
+Filler plug
+2
+Inspection and drain plug
+3
+Correct oil level
+1. Tram the gear to a position where the drain plug (2) is pointing
+downward.
+2. Open both plugs and drain the oil into a container.
+3. Tram the tramming gear to filling position.
+4. Add oil to the tramming gear. The correct amount of oil for the tramming
+gear is 2.0 liters.
+5. Close both plugs.
+174 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#2</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 173</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+5.7.7
+Changing the tramming gear oil, Rexroth GFT 8000
+For the correct oil grade, refer to the "Lubricants and capacities" section.
+1
+2
+Gear in draining position
+1
+3
+2
+Gear in filling/inspection position
+1
+Filling plug
+2
+Inspection/draining plug
+3
+Correct oil level
+1. Tram the gear to a draining position.
+In draining position the inspection/draining plug (2) is pointing downward.
+2. Open the inspection/draining plug (2) and filling plug (1) and drain the oil
+into a container.
+3. Tram the gear to a filling/inspection position.
+In filling/inspection position the inspection/draining plug (2) is pointing
+left.
+4. Fill the tramming gear slowly until some oil drains from the threaded plug
+hole (2).
+5. Close the inspection/draining plug (2) and filling plug (1).
+6. Let the planetary gear box run for few minutes.
+7. Let the planetary gear box cool for few minutes.
+8. Check the oil level and add oil if necessary.
+173 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#3</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 246</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Oils and fluids suitable for hydraulic systems are, e.g.
+• Shell Naturelle HFE (biodegradable hydraulic oil, synthetic ester)
+A recommended water content for the biodegradable hydraulic oils is &lt;300
+ppm.
+246 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#4</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 245</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+4. If the drilling conditions are such that single-grade oils do not remain
+within the given viscosity limits, choose a multigrade oil.
+5. The oil should be changed once a year unless heavy use requires more
+frequent changes. This change interval recommendation is based on the
+extent that the oil ages and gathers moisture over a one-year period.
+For arctic conditions (temperatures below –20°C), we recommend synthetic
+oils.
+Maximum permissible degree of contamination of the hydraulic fluid;
+cleanliness class 20/15/12 according to the ISO 4406 (c).
+A recommended water content for the hydraulic oils is &lt;1000 ppm.
+Hydraulic oils
+DIN 51524 part 2 HLP, ISO 6743-4 HM, DIN 51524 part 3 HVLP, ISO
+6743-4 HV
+Viscosity/temperature table
+Viscosity cSt
+(40°C)
+Operating temperature
+°C
+°F
+-30
+-22
+-20
+-4
+-10
++14
+0
++32
++10
++50
++20
++68
++30
++86
++40
++104
++50
++122
++60
++140
++70
++158
+32
+46
+68
+100
+150
+Recommended temperature range
+Temporarily allowed temperature range
+Lowest permitted starting temperature
+Oils and fluids suitable for hydraulic systems are, e.g.
+• Shell Tellus S2 V 68 (hydraulic oil)
+245 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#5</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Obtain the Sample and the Analysis</span>
+    <span>📃 Page 89–90</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">obtained during normal engine operation.
+Table 13
+Oil Change Interval (1)
+Multigrade Oil Type
+Operating Conditions
+Normal
+Severe Service
+Application
+The 169-8373 Fluid Sampling Bottle is
+recommended for use with the sampling valve. The
+fluid sampling bottle includes the parts that are
+needed for obtaining oil samples. Instructions are
+also provided.
+Cat DEO-ULS
+Preferred
+500 hr
+250 hr
+500 hr
+250 hr
+Oil meeting the requirements
+of the Cat ECF-3 Specifica-
+tion or the API CJ-4
+classification
+8 minimum TBN
+Preferred
+NOTICE
+Always use a designated pump for oil sampling, and
+use a separate designated pump for coolant sam-
+pling. Using the same pump for both types of samples
+may contaminate the samples that are being drawn.
+This contaminate may cause a false analysis and an
+incorrect interpretation that could lead to concerns by
+both dealers and customers.
+Oil meeting the requirements
+of the ACEA C9/E6
+Specification
+TBN below 10.4
+500 hr
+250 hr
+(1) Refer to Special Publication, PEHJ0192, “Optimizing Oil
+Change Intervals” for further information..
+If the engine is not equipped with a sampling valve,
+use the 1U-5718 Vacuum Pump. The pump is
+designed to accept sampling bottles. Disposable</div>
+</div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<div class="question-card">
+  <div class="q-header">
+    <div class="q-num">13</div>
+    <div class="q-text">What safety precaution must be taken before working on the hydraulic system?</div>
+    <div class="badge partial_match">Partial Match</div>
+  </div>
+  <div class="q-body">
+
+    <div>
+      <div class="section-label">RAG Answer</div>
+      <div class="answer-box">Answer:
+Before working on the hydraulic system, ensure that all stored energy is released, as the system may still contain pressure even when gauges show 0 bar. Proceed with caution, use approved personal protective equipment, and only allow trained personnel to perform maintenance or repair work on pressurized systems.
+
+Sources:
+- maintenance.pdf | WARNING | pages 62-62</div>
+    </div>
+
+    <div>
+      <div class="section-label">Ground Truth</div>
+      <div class="ground-truth-box">Contact with hot oil in hydraulic systems could cause death or severe injury. The oil must be allowed to cool down before starting any maintenance work.</div>
+    </div>
+
+    <div class="chunks-section">
+      <div class="section-label">Retrieved Source Chunks (5)</div>
+      
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#1</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 WARNING</span>
+    <span>📃 Page 62</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">WARNING
+HAZARDOUS STORED ENERGY!
+This machine contains stored energy in various forms. The energy
+could cause unexpected consequences, death or severe injuries, if
+not dealt with properly.
+Before any maintenance or service work, make sure any stored
+energy is released.
+Leave maintenance work to professionals. Follow applicable
+instructions.
+Any instructions given in laws and regulations, any orders given by local
+authorities, and all protective measures must be strictly adhered to.
+Maintenance and repair work on the pressurized systems may only be
+carried out by persons who have received the training required for the work.
+Do not start work that is not fully familiar to you.
+Hydraulic system isolation
+WARNING! HAZARDOUS STORED ENERGY!
+There may still be pressure remaining in the system even when the
+gauges show 0 bar.
+Proceed with caution when working with hydraulic systems. Use
+approved personal protective equipment.
+When the machine is switched off, be aware that there is still stored
+pressure in the hydraulic system. Hydraulic system can store pressure in
+the rock drill accumulators, as well as in machine components which are</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#2</strong></span>
+    <span>📄 OM SEBU9105-02.pdf</span>
+    <span>📌 Important Safety Information</span>
+    <span>📃 Page 2–3</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Important Safety Information
+Most accidents that involve product operation, maintenance and repair are caused by failure to observe
+basic safety rules or precautions. An accident can often be avoided by recognizing potentially hazardous
+situations before an accident occurs. A person must be alert to potential hazards, including human factors
+that can affect safety. This person should also have the necessary training, skills and tools to perform these
+functions properly.
+Improper operation, lubrication, maintenance or repair of this product can be dangerous and could
+result in injury or death.
+Do not operate or perform any lubrication, maintenance or repair on this product, until you verify
+that you are authorized to perform this work, and have read and understood the operation,
+lubrication, maintenance and repair information.
+Safety precautions and warnings are provided in this manual and on the product. If these hazard warnings
+are not heeded, bodily injury or death could occur to you or to other persons.
+The hazards are identified by the “Safety Alert Symbol” and followed by a “Signal Word” such as
+“DANGER”, “WARNING” or “CAUTION”. The Safety Alert “WARNING” label is shown below.</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#3</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 Adjusting the safety wire</span>
+    <span>📃 Page 282</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Adjusting the safety wire
+During safety wire adjustment, the engine must be stopped. The control
+system must be running.
+1. Adjust the wire pre-tension with adjustment screw A so that the edge of
+attachment link B of the lower end of the wire is at the groove on the
+switch lever.
+A
+B
+C
+282 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#4</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 WARNING</span>
+    <span>📃 Page 275</span>
+    <span><span class="tag">table</span></span>
+  </div>
+  <div class="chunk-text">WARNING
+LIFTING HAZARD!
+Incorrect lifting methods could result in death or severe injury.
+The danger zone must be clear of people during lifting. Never lift the
+load over anyone.
+Before lifting the rig, move the boom and the feed into the tramming
+position.
+Always follow the appropriate local legislation and safety regulations
+concerning lifting safety.
+Consider the rig's total weight, which is indicated on the rig's type
+plate and/or in the technical specification.</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#5</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 63</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+from which pressure has not been released (e.g. compressor intake valve's
+pressure accumulator will remain pressurized, even if pressure is released
+from the pneumatic circuit). When performing any maintenance or repair
+work, always use approved personal protective equipment. Proceed with
+caution and comply with all safety requirements.
+Fuel system isolation
+Isolate the fuel system by shutting the valves on the fuel tank. This will
+prevent any environmental contamination during maintenance.
+Electrical system isolation
+Before performing any maintenance work, always ensure that the batteries
+are disconnected from the electrical system by the main switch. Make sure
+that the machine cannot be started accidentally.
+In spite of these precautionary measures, parts of the electrical system still
+have electricity. When performing any maintenance or repair work, always
+use approved personal protective equipment. Proceed with caution and
+comply with all safety requirements.</div>
+</div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<div class="question-card">
+  <div class="q-header">
+    <div class="q-num">14</div>
+    <div class="q-text">What standards must hydraulic oils meet?</div>
+    <div class="badge likely_match">Likely Match</div>
+  </div>
+  <div class="q-body">
+
+    <div>
+      <div class="section-label">RAG Answer</div>
+      <div class="answer-box">Answer:
+Hydraulic oils must be high quality, retain their properties under fluctuating temperature conditions, and contain additives typical of high-performance hydraulic oils. For biodegradable hydraulic oils, they must meet the same high technical quality requirements as conventional mineral oils and additionally comply with environmental criteria including biodegradability, toxicity, and proper use and disposal. The international standard ISO 15380 specifies requirements for environmentally acceptable hydraulic fluids. For fire retardant hydraulic fluids, oils must be non-flammable with self-extinguishing properties and comply with ISO 6743-4 HFD standard for synthetic fluids. Oils must also be compatible with metals and seal materials used in the system. Mixing different types of hydraulic oils or fluids is not allowed.
+
+Sources:
+- maintenance.pdf | Hydraulic system | pages 244-244
+- maintenance.pdf | DI450-DI560 TIER4 | pages 246-247</div>
+    </div>
+
+    <div>
+      <div class="section-label">Ground Truth</div>
+      <div class="ground-truth-box">Hydraulic oils must meet DIN 51524 part 2 HLP, ISO 6743-4 HM, DIN 51524 part 3 HVLP, or ISO 6743-4 HV standards.</div>
+    </div>
+
+    <div class="chunks-section">
+      <div class="section-label">Retrieved Source Chunks (5)</div>
+      
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#1</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 Hydraulic system</span>
+    <span>📃 Page 244</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Hydraulic system
+Oil viscosity recommendations are based on the operating temperature of
+the oil.
+Note!
+Never mix different types of hydraulic system oils. Mixing can
+damage the hydraulic components.
+The selected hydraulic oil must be high quality and must retain its
+properties in fluctuating temperature conditions. Furthermore, it should
+contain additives typical of high performance hydraulic oils.
+When choosing the viscosity of the oil to be used, the temperature of the
+drilling environment is important. Pay attention to temperature fluctuation.
+When choosing the oil, consider the following:
+1. Check or estimate the operating temperature of the oil.
+2. The viscosity of oils at their operating temperature should be close to 60
+cSt, and any variation in continuous use should remain within the range
+50–110 cSt.
+The following variation limits are permitted temporarily (but not
+constantly):
+• 110–200 cSt as a result of a low temperature peak, or
+• 30–50 cSt as a result of a high temperature peak.
+The values indicated in the tables should be considered first and
+foremost. In each case you must always make sure that the product in
+question has the required properties.</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#2</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 246</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+Biodegradable hydraulic oils
+Sandvik sets the same high technical quality requirements for
+biodegradable oils as are set for conventional mineral oils. In addition, the
+oils must be environmentally friendly in terms of the following quality
+requirements:
+• biodegradability
+• toxicity
+• use and disposal.
+The international standard ISO 15380 specifies the requirements for
+environmentally acceptable hydraulic fluids.
+Viscosity/temperature table
+Viscosity cSt
+(40°C)
+Operating temperature
+°C
+°F
+-30
+-22
+-20
+-4
+-10
++14
+0
++32
++10
++50
++20
++68
++30
++86
++40
++104
++50
++122
++60
++140
++70
++158
+46
+68
+Recommended temperature range
+Temporarily allowed temperature range
+Lowest permitted starting temperature
+Instructions for changing biodegradable oils are provided in the manual
+"Biodegradable hydraulic oils – change instructions".
+Note!
+When biodegradable oils (optional) are used, Sandvik factory fill oils
+are SHELL NATURELLE HFE 46 or HFE 68 (synthetic ester). The
+guarantee is valid only when these oils are used.
+Oils and fluids suitable for hydraulic systems are, e.g.
+• Shell Naturelle HFE (biodegradable hydraulic oil, synthetic ester)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#3</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 247</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+Fire retardant hydraulic fluids
+Sandvik sets the same high technical quality requirements for less
+flammable hydraulic fluids as are set for conventional mineral oils. In
+addition, the oils must be non-flammable, with self-extinguishing properties.
+A range of fire retardant fluids are available on the market, the properties of
+which differ greatly.
+In risk-prone conditions, Sandvik recommends the use of fluids that comply
+with the ISO 6743-4 HFD standard for synthetic fluids.
+Note!
+For safety, performance and environmental reasons, Sandvik does
+not allow mixing of different hydraulic oils/fluids.
+These fluids must be compatible with the majority of metals and seal
+materials.
+Sandvik uses fire retardant and biodegradable HFD fluids as factory-fill oils:
+Fuchs Plantoflux 68-AT-S (Tampere plant) and Condat D68 (Lyon plant).
+Sandvik recommends these fluids for use in drilling rigs. Since the
+availability of these fluids can be limited in certain market areas, Sandvik
+also approves the following alternative:
+• Quintolubric 888-68 (Quaker Chemicals)
+Sandvik factory fill oils are totally miscible with the fluid mentioned above.</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#4</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 General</span>
+    <span>📃 Page 242</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Mistakes in choosing and using oil
+Components may be damaged if
+• a wrong oil type has been chosen
+• a wrong oil viscosity has been chosen
+• the recommended oil change interval is exceeded.
+Oils must be changed at certain intervals because the properties of the oil
+and its additives deteriorate and are lost as the oil ages.
+Note!
+Observe the color and clearness of the oil. Water and other
+impurities in the oil can cause malfunctions in the hydraulic system
+and serious component damage (e.g. to rock drills). If the oil is light
+grey or dull, change the oil. Find the cause of the oil impurity.
+242 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#5</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 Hydraulic system</span>
+    <span>📃 Page 244</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">foremost. In each case you must always make sure that the product in
+question has the required properties.
+3. If the drilling environment temperature does not vary greatly, we
+recommend that you use single-grade oils which undergo minimal
+viscosity variation during use.
+244 (348)</div>
+</div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<div class="question-card">
+  <div class="q-header">
+    <div class="q-num">15</div>
+    <div class="q-text">What is the recommended hydraulic oil for arctic conditions?</div>
+    <div class="badge likely_match">Likely Match</div>
+  </div>
+  <div class="q-body">
+
+    <div>
+      <div class="section-label">RAG Answer</div>
+      <div class="answer-box">Answer:
+For arctic conditions (temperatures below –20°C), synthetic hydraulic oils are recommended. Suitable oils include synthetic multigrade oils that maintain viscosity within the required limits at low temperatures. Examples of recommended oils are Shell Tellus S2 V 68 (mineral-based synthetic) and Shell Naturelle HFE 46 or HFE 68 (biodegradable synthetic ester). The oil should have a viscosity close to 60 cSt at operating temperature, with permissible variations between 50–110 cSt during continuous use. Water content should be kept below 1000 ppm for mineral oils and below 300 ppm for biodegradable oils.
+
+Sources:
+- maintenance.pdf | DI450-DI560 TIER4 | pages 245-247
+- maintenance.pdf | Hydraulic system | page 244</div>
+    </div>
+
+    <div>
+      <div class="section-label">Ground Truth</div>
+      <div class="ground-truth-box">For arctic conditions with temperatures below -20 degrees Celsius, synthetic oils are recommended for the hydraulic system.</div>
+    </div>
+
+    <div class="chunks-section">
+      <div class="section-label">Retrieved Source Chunks (5)</div>
+      
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#1</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 245</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+4. If the drilling conditions are such that single-grade oils do not remain
+within the given viscosity limits, choose a multigrade oil.
+5. The oil should be changed once a year unless heavy use requires more
+frequent changes. This change interval recommendation is based on the
+extent that the oil ages and gathers moisture over a one-year period.
+For arctic conditions (temperatures below –20°C), we recommend synthetic
+oils.
+Maximum permissible degree of contamination of the hydraulic fluid;
+cleanliness class 20/15/12 according to the ISO 4406 (c).
+A recommended water content for the hydraulic oils is &lt;1000 ppm.
+Hydraulic oils
+DIN 51524 part 2 HLP, ISO 6743-4 HM, DIN 51524 part 3 HVLP, ISO
+6743-4 HV
+Viscosity/temperature table
+Viscosity cSt
+(40°C)
+Operating temperature
+°C
+°F
+-30
+-22
+-20
+-4
+-10
++14
+0
++32
++10
++50
++20
++68
++30
++86
++40
++104
++50
++122
++60
++140
++70
++158
+32
+46
+68
+100
+150
+Recommended temperature range
+Temporarily allowed temperature range
+Lowest permitted starting temperature
+Oils and fluids suitable for hydraulic systems are, e.g.
+• Shell Tellus S2 V 68 (hydraulic oil)
+245 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#2</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 246</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">DI450-DI560 TIER4
+Biodegradable hydraulic oils
+Sandvik sets the same high technical quality requirements for
+biodegradable oils as are set for conventional mineral oils. In addition, the
+oils must be environmentally friendly in terms of the following quality
+requirements:
+• biodegradability
+• toxicity
+• use and disposal.
+The international standard ISO 15380 specifies the requirements for
+environmentally acceptable hydraulic fluids.
+Viscosity/temperature table
+Viscosity cSt
+(40°C)
+Operating temperature
+°C
+°F
+-30
+-22
+-20
+-4
+-10
++14
+0
++32
++10
++50
++20
++68
++30
++86
++40
++104
++50
++122
++60
++140
++70
++158
+46
+68
+Recommended temperature range
+Temporarily allowed temperature range
+Lowest permitted starting temperature
+Instructions for changing biodegradable oils are provided in the manual
+"Biodegradable hydraulic oils – change instructions".
+Note!
+When biodegradable oils (optional) are used, Sandvik factory fill oils
+are SHELL NATURELLE HFE 46 or HFE 68 (synthetic ester). The
+guarantee is valid only when these oils are used.
+Oils and fluids suitable for hydraulic systems are, e.g.
+• Shell Naturelle HFE (biodegradable hydraulic oil, synthetic ester)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#3</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 246</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Oils and fluids suitable for hydraulic systems are, e.g.
+• Shell Naturelle HFE (biodegradable hydraulic oil, synthetic ester)
+A recommended water content for the biodegradable hydraulic oils is &lt;300
+ppm.
+246 (348)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#4</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 DI450-DI560 TIER4</span>
+    <span>📃 Page 247</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">• Quintolubric 888-68 (Quaker Chemicals)
+Sandvik factory fill oils are totally miscible with the fluid mentioned above.
+Thus, the factory filled oil can be changed as necessary in connection with
+the rig start-up inspection without flushing the hydraulic system. Sandvik
+does not approve continuous mixing of hydraulic fluids.
+Note!
+The guarantee is valid only if the recommended fluids are used.
+Oils and fluids suitable for hydraulic systems are, e.g.
+• Fuchs Plantoflux 68-AT-S (less flammable hydraulic fluid)</div>
+</div>
+
+<div class="chunk">
+  <div class="chunk-meta">
+    <span><strong>#5</strong></span>
+    <span>📄 maintenance.pdf</span>
+    <span>📌 Hydraulic system</span>
+    <span>📃 Page 244</span>
+    <span><span class="tag">section</span></span>
+  </div>
+  <div class="chunk-text">Hydraulic system
+Oil viscosity recommendations are based on the operating temperature of
+the oil.
+Note!
+Never mix different types of hydraulic system oils. Mixing can
+damage the hydraulic components.
+The selected hydraulic oil must be high quality and must retain its
+properties in fluctuating temperature conditions. Furthermore, it should
+contain additives typical of high performance hydraulic oils.
+When choosing the viscosity of the oil to be used, the temperature of the
+drilling environment is important. Pay attention to temperature fluctuation.
+When choosing the oil, consider the following:
+1. Check or estimate the operating temperature of the oil.
+2. The viscosity of oils at their operating temperature should be close to 60
+cSt, and any variation in continuous use should remain within the range
+50–110 cSt.
+The following variation limits are permitted temporarily (but not
+constantly):
+• 110–200 cSt as a result of a low temperature peak, or
+• 30–50 cSt as a result of a high temperature peak.
+The values indicated in the tables should be considered first and
+foremost. In each case you must always make sure that the product in
+question has the required properties.</div>
+</div>
+
+    </div>
+
+  </div>
+</div>
+
+</div>
+
+<div class="footer">
+  Engineering RAG Evaluation Report &mdash; 2026-04-05 03:01:53
+</div>
+
+</body>
+</html>
