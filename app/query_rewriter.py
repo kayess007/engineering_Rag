@@ -31,7 +31,11 @@ Rules:
 """
 
 
-def rewrite_query(question: str, model: str = "gpt-4.1-mini") -> list[str]:
+def rewrite_query(
+    question: str,
+    model: str = "gpt-4.1-mini",
+    max_variants: int = 3,
+) -> list[str]:
     """
     Returns [original_question] + up to 3 LLM-generated query variants.
     Falls back to [original_question] on any error so retrieval is never blocked.
@@ -43,8 +47,8 @@ def rewrite_query(question: str, model: str = "gpt-4.1-mini") -> list[str]:
                 {"role": "system", "content": _SYSTEM_PROMPT},
                 {"role": "user", "content": question},
             ],
-            temperature=0.3,
-            max_tokens=300,
+            temperature=0.0,
+            max_tokens=220,
         )
         raw = resp.choices[0].message.content or ""
         variants = []
@@ -61,7 +65,7 @@ def rewrite_query(question: str, model: str = "gpt-4.1-mini") -> list[str]:
             if v.lower() not in seen:
                 seen.add(v.lower())
                 queries.append(v)
-        return queries[:4]  # original + up to 3 variants
+        return queries[: 1 + max(0, max_variants)]  # original + capped variants
     except Exception as e:
         print(f"[query_rewriter] LLM rewrite failed ({e}), using original query.")
         return [question]

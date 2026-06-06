@@ -22,12 +22,18 @@ def _get_model():
         _model = CrossEncoder(
             "cross-encoder/ms-marco-MiniLM-L-6-v2",
             max_length=512,
+            device="cpu",
         )
         print("[reranker] Cross-encoder loaded.")
     return _model
 
 
-def rerank(query: str, chunks: list[dict], top_k: int | None = None) -> list[dict]:
+def rerank(
+    query: str,
+    chunks: list[dict],
+    top_k: int | None = None,
+    min_score: float | None = None,
+) -> list[dict]:
     """
     Score each chunk against the query and return them sorted by score descending.
 
@@ -35,6 +41,8 @@ def rerank(query: str, chunks: list[dict], top_k: int | None = None) -> list[dic
         query:   The user question (original or rewritten).
         chunks:  List of chunk dicts, each must have a "text" key.
         top_k:   If given, return only the top-k results.
+        min_score: Optional cross-encoder score floor. If nothing survives,
+                   falls back to the unfiltered ranking.
 
     Returns:
         Chunks sorted by cross-encoder score, each with a "_ce_score" key added.
@@ -56,11 +64,17 @@ def rerank(query: str, chunks: list[dict], top_k: int | None = None) -> list[dic
 
     scored.sort(key=lambda x: x["_ce_score"], reverse=True)
 
+    filtered = scored
+    if min_score is not None:
+        filtered = [c for c in scored if c["_ce_score"] >= min_score]
+        if not filtered:
+            filtered = scored
+
     if top_k is not None:
-        scored = scored[:top_k]
+        filtered = filtered[:top_k]
 
     # Strip internal score key before returning
-    for c in scored:
+    for c in filtered:
         c.pop("_ce_score", None)
 
-    return scored
+    return filtered

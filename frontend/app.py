@@ -35,6 +35,22 @@ def server_ok() -> bool:
         return False
 
 
+_QUERY_TYPE_LABELS = {
+    "parts":       ("🔩", "Parts Manual"),
+    "maintenance": ("🔧", "Maintenance Manual"),
+    "both":        ("🔩🔧", "Parts + Maintenance Manuals"),
+}
+
+
+def _query_type_badge(query_type: str | None, collections: list | None = None):
+    """Render a small caption badge showing which collection(s) were searched."""
+    if not query_type:
+        return
+    icon, label = _QUERY_TYPE_LABELS.get(query_type, ("", query_type))
+    detail = f" (`{'`, `'.join(collections)}`)" if collections else ""
+    st.caption(f"{icon} Searched: **{label}**{detail}")
+
+
 def _banner(ok: bool):
     if ok:
         st.sidebar.success("Server: online")
@@ -73,7 +89,7 @@ if page == "💬 Chat":
 
     # ── Settings ──────────────────────────────────────────────────────────────
     with st.sidebar.expander("Settings", expanded=False):
-        k = st.slider("Chunks to retrieve (k)", 1, 20, 8)
+        k = st.slider("Chunks to retrieve (k)", 1, 20, 6)
         model = st.selectbox("LLM model", ["gpt-4.1-mini", "gpt-4o", "gpt-4o-mini"])
         advanced_mode = st.toggle(
             "Advanced mode",
@@ -90,6 +106,8 @@ if page == "💬 Chat":
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
+            if msg["role"] == "assistant":
+                _query_type_badge(msg.get("query_type"), msg.get("collections_searched"))
             if msg["role"] == "assistant" and show_sources and msg.get("sources"):
                 with st.expander("Sources"):
                     for s in msg["sources"]:
@@ -104,6 +122,29 @@ if page == "💬 Chat":
                     for i, ctx in enumerate(msg["contexts"], 1):
                         st.markdown(f"**Chunk {i}**")
                         st.text(ctx[:600] + ("…" if len(ctx) > 600 else ""))
+            # ── Feedback buttons ──────────────────────────────────────────
+            if msg["role"] == "assistant" and msg.get("msg_id") is not None:
+                mid = msg["msg_id"]
+                if msg.get("feedback_given"):
+                    st.caption("✅ Feedback recorded")
+                else:
+                    fb_col1, fb_col2, fb_col3 = st.columns([1, 1, 8])
+                    with fb_col1:
+                        if st.button("👍", key=f"up_{mid}"):
+                            try:
+                                api.submit_feedback(msg["question"], msg["content"], "positive", sources=msg.get("sources", []))
+                                msg["feedback_given"] = True
+                                st.rerun()
+                            except Exception:
+                                st.warning("Could not save feedback.")
+                    with fb_col2:
+                        if st.button("👎", key=f"dn_{mid}"):
+                            try:
+                                api.submit_feedback(msg["question"], msg["content"], "negative", sources=msg.get("sources", []))
+                                msg["feedback_given"] = True
+                                st.rerun()
+                            except Exception:
+                                st.warning("Could not save feedback.")
 
     # ── Input ─────────────────────────────────────────────────────────────────
     if prompt := st.chat_input("Ask about your engineering manuals…"):
@@ -122,12 +163,15 @@ if page == "💬 Chat":
                     )
                     answer = result.get("answer", "No answer returned.")
                     sources = result.get("sources", [])
+                    query_type = result.get("query_type")
+                    collections_searched = result.get("collections_searched")
 
                     # Retrieve context chunks separately for display
                     raw_chunks = api.query(prompt, k=k)
                     contexts = [c.get("text", "") for c in raw_chunks]
 
                     st.markdown(answer)
+                    _query_type_badge(query_type, collections_searched)
 
                     if show_sources and sources:
                         with st.expander("Sources"):
@@ -145,11 +189,17 @@ if page == "💬 Chat":
                                 st.markdown(f"**Chunk {i}**")
                                 st.text(ctx[:600] + ("…" if len(ctx) > 600 else ""))
 
+                    msg_id = len(st.session_state.messages)
                     st.session_state.messages.append({
                         "role": "assistant",
                         "content": answer,
                         "sources": sources,
                         "contexts": contexts,
+                        "query_type": query_type,
+                        "collections_searched": collections_searched,
+                        "msg_id": msg_id,
+                        "question": prompt,
+                        "feedback_given": False,
                     })
 
                 except Exception as e:
@@ -168,21 +218,31 @@ elif page == "📄 Documents":
     st.title("📄 Document Management")
 
     # ── Upload ────────────────────────────────────────────────────────────────
-    st.subheader("Upload a new manual")
-    uploaded = st.file_uploader("Choose a PDF file", type=["pdf"])
+    st.subheader("Upload manuals")
+    uploaded_files = st.file_uploader(
+        "Choose one or more PDF files",
+        type=["pdf"],
+        accept_multiple_files=True,
+    )
 
-    if uploaded:
-        col1, col2 = st.columns([2, 1])
-        with col1:
-            st.info(f"Selected: **{uploaded.name}** ({uploaded.size / 1024:.1f} KB)")
-        with col2:
-            if st.button("Upload & Process", type="primary", use_container_width=True):
-                if not st.session_state.token:
-                    st.error("Please log in first (sidebar → Login).")
-                else:
+    if uploaded_files:
+        total = len(uploaded_files)
+        st.info(
+            f"**{total} file{'s' if total > 1 else ''} selected:** "
+            + ", ".join(f.name for f in uploaded_files)
+        )
+
+        if st.button("Upload & Process All", type="primary"):
+            if not st.session_state.token:
+                st.error("Please log in first (sidebar → Login).")
+            else:
+                token = st.session_state.token
+                succeeded, failed = 0, 0
+
+                for idx, uploaded in enumerate(uploaded_files, start=1):
+                    st.markdown(f"**[{idx}/{total}] {uploaded.name}**")
                     progress = st.progress(0, text="Uploading…")
                     try:
-                        token = st.session_state.token
                         # Step 1: Upload + parse
                         upload_result = api.upload_manual(uploaded.read(), uploaded.name, token)
                         progress.progress(33, text="Chunking…")
@@ -195,20 +255,24 @@ elif page == "📄 Documents":
                         index_result = api.index_manual(chunk_result["chunked_file"], token)
                         progress.progress(100, text="Done!")
 
+                        manual_type = upload_result.get("manual_type", "maintenance")
+                        icon, type_label = _QUERY_TYPE_LABELS.get(manual_type, ("📄", manual_type))
                         st.success(
-                            f"✅ **{uploaded.name}** processed successfully — "
-                            f"{chunk_result['chunk_count']} chunks indexed."
+                            f"✅ {chunk_result['chunk_count']} chunks indexed into "
+                            f"{index_result.get('collection_name', 'unknown')}  {icon} {type_label}"
                         )
-                        st.json({
-                            "manual_id": upload_result["manual_id"],
-                            "elements_parsed": upload_result["element_count"],
-                            "chunks_created": chunk_result["chunk_count"],
-                            "chunks_indexed": index_result["indexed_count"],
-                        })
+                        succeeded += 1
 
                     except Exception as e:
                         progress.empty()
                         st.error(f"Failed: {e}")
+                        failed += 1
+
+                st.divider()
+                if failed == 0:
+                    st.success(f"All {succeeded} file{'s' if succeeded > 1 else ''} processed successfully.")
+                else:
+                    st.warning(f"{succeeded} succeeded, {failed} failed.")
 
     st.divider()
 
@@ -316,6 +380,33 @@ elif page == "📊 Status":
             st.info("No manuals indexed yet.")
     except Exception as e:
         st.error(f"Error: {e}")
+
+    st.divider()
+
+    # ── Feedback summary ──────────────────────────────────────────────────────
+    st.subheader("User Feedback")
+    try:
+        fb = api.get_feedback()
+        total = fb.get("count", 0)
+        if total == 0:
+            st.info("No feedback yet. Ask questions and use 👍/👎 in the Chat page.")
+        else:
+            pos = fb.get("positive", 0)
+            neg = fb.get("negative", 0)
+            fc1, fc2, fc3 = st.columns(3)
+            fc1.metric("Total Ratings", total)
+            fc2.metric("👍 Positive", pos)
+            fc3.metric("👎 Negative", neg)
+
+            if neg > 0:
+                with st.expander(f"Negative feedback ({neg})"):
+                    for entry in fb["feedback"]:
+                        if entry["rating"] == "negative":
+                            st.markdown(f"**Q:** {entry['question']}")
+                            st.caption(f"{entry['timestamp']} | Comment: {entry.get('comment') or '—'}")
+                            st.divider()
+    except Exception as e:
+        st.error(f"Could not load feedback: {e}")
 
     st.divider()
 

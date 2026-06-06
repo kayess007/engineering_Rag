@@ -60,10 +60,13 @@ def chunk_manual(parsed_file_path: str, token: str) -> dict:
     return r.json()
 
 
-def index_manual(chunked_file_path: str, token: str, collection_name: str = "engineering_manuals") -> dict:
+def index_manual(chunked_file_path: str, token: str, collection_name: str | None = None) -> dict:
+    payload: dict = {"chunked_file_path": chunked_file_path}
+    if collection_name is not None:
+        payload["collection_name"] = collection_name
     r = requests.post(
         f"{BASE_URL}/manuals/index",
-        json={"chunked_file_path": chunked_file_path, "collection_name": collection_name},
+        json=payload,
         headers=_auth(token),
         timeout=600,
     )
@@ -81,7 +84,7 @@ def delete_manual(manual_id: str, token: str) -> dict:
     return r.json()
 
 
-def ask(question: str, k: int = 8, model: str = "gpt-4.1-mini") -> dict:
+def ask(question: str, k: int = 6, model: str = "gpt-4.1-mini") -> dict:
     r = requests.post(
         f"{BASE_URL}/ask",
         json={"question": question, "k": k, "model": model},
@@ -91,7 +94,7 @@ def ask(question: str, k: int = 8, model: str = "gpt-4.1-mini") -> dict:
     return r.json()
 
 
-def ask_advanced(question: str, k: int = 8, model: str = "gpt-4.1-mini") -> dict:
+def ask_advanced(question: str, k: int = 6, model: str = "gpt-4.1-mini") -> dict:
     r = requests.post(
         f"{BASE_URL}/ask/advanced",
         json={"question": question, "k": k, "model": model},
@@ -101,7 +104,7 @@ def ask_advanced(question: str, k: int = 8, model: str = "gpt-4.1-mini") -> dict
     return r.json()
 
 
-def query(question: str, k: int = 8) -> list[dict]:
+def query(question: str, k: int = 6) -> list[dict]:
     r = requests.post(
         f"{BASE_URL}/query",
         json={"question": question, "k": k},
@@ -109,3 +112,19 @@ def query(question: str, k: int = 8) -> list[dict]:
     )
     r.raise_for_status()
     return r.json().get("results", [])
+
+
+def submit_feedback(question: str, answer: str, rating: str, comment: str = "", sources: list = []) -> dict:
+    r = requests.post(
+        f"{BASE_URL}/feedback",
+        json={"question": question, "answer": answer, "rating": rating, "comment": comment, "sources": sources},
+        timeout=10,
+    )
+    r.raise_for_status()
+    return r.json()
+
+
+def get_feedback() -> dict:
+    r = requests.get(f"{BASE_URL}/feedback", timeout=10)
+    r.raise_for_status()
+    return r.json()

@@ -2,15 +2,19 @@ import json
 import time
 import uuid
 import traceback
+from datetime import datetime, timezone
 from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
+
+FEEDBACK_FILE = Path("storage/feedback.jsonl")
 
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.auth import login, require_auth
+from app.query_classifier import classify_query, collection_for_type
 from app.chunker import chunk_parsed_document, load_parsed_json, save_chunked_json
 from app.logging_config import setup_logging
 from app.middleware import RequestLoggingMiddleware
@@ -39,21 +43,24 @@ class ChunkRequest(BaseModel):
 
 class IndexRequest(BaseModel):
     chunked_file_path: str
-    collection_name: str = "engineering_manuals"
+    collection_name: str | None = None   # if None, auto-derived from manual_type
+    manual_type: str | None = None       # "parts" | "maintenance" — auto-detected from filename if omitted
 
 
 class QueryRequest(BaseModel):
     question: str
-    collection_name: str = "engineering_manuals"
-    k: int = 8
+    collection_name: str | None = None  # auto-routed by query classifier if omitted
+    k: int = 6
     filters: dict | None = None
 
 
 class AskRequest(BaseModel):
     question: str
-    collection_name: str = "engineering_manuals"
-    k: int = 8
+    collection_name: str | None = None  # auto-routed by query classifier if omitted
+    k: int = 6
     model: str = "gpt-4.1-mini"
+    response_mode: str = "standard"
+    include_contexts: bool = False
     filters: dict | None = None
 
 
@@ -78,6 +85,7 @@ def list_manuals():
                 {
                     "manual_id": data.get("manual_id"),
                     "filename": data.get("filename"),
+                    "equipment_model": data.get("equipment_model"),
                     "element_count": data.get("element_count"),
                 }
             )
@@ -125,8 +133,54 @@ def delete_manual(manual_id: str, collection_name: str = "engineering_manuals", 
         raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
 
 
+_MODEL_HINTS = {
+    "sebu9105": "C13",
+    "c13": "C13",
+    "maintenance": "DI450-DI560",
+    "di450": "DI450",
+    "di560": "DI560",
+    "sebp6451": "C13-Parts",
+}
+
+# Keywords in filenames/models that signal a parts manual
+_PARTS_FILENAME_SIGNALS = {"parts", "sebp", "part-manual", "parts-manual", "catalogue", "catalog"}
+_PARTS_MODEL_SIGNALS = {"parts", "part"}
+
+# Map manual_type → ChromaDB collection name
+COLLECTION_MAP = {
+    "parts": "parts_manuals",
+    "maintenance": "maintenance_manuals",
+}
+
+
+def _detect_equipment_model(filename: str, hint: str | None = None) -> str | None:
+    if hint:
+        return hint.strip()
+    lower = filename.lower()
+    for key, model in _MODEL_HINTS.items():
+        if key in lower:
+            return model
+    return None
+
+
+def _detect_manual_type(filename: str, equipment_model: str | None = None) -> str:
+    """Return 'parts' or 'maintenance' based on filename and equipment_model."""
+    lower = filename.lower()
+    if any(sig in lower for sig in _PARTS_FILENAME_SIGNALS):
+        return "parts"
+    if equipment_model:
+        model_lower = equipment_model.lower()
+        if any(sig in model_lower for sig in _PARTS_MODEL_SIGNALS):
+            return "parts"
+    return "maintenance"
+
+
 @app.post("/manuals/upload")
-async def upload_manual(file: UploadFile = File(...), _user: str = Depends(require_auth)):
+async def upload_manual(
+    file: UploadFile = File(...),
+    equipment_model: str | None = None,
+    _user: str = Depends(require_auth),
+):
     if not file.filename:
         raise HTTPException(status_code=400, detail="File must have a filename.")
 
@@ -156,12 +210,16 @@ async def upload_manual(file: UploadFile = File(...), _user: str = Depends(requi
         elements = parse_pdf_to_elements(str(saved_path))
         print(f"Parsed {len(elements)} elements")
 
+        detected_model = _detect_equipment_model(file.filename, equipment_model)
+        detected_type = _detect_manual_type(file.filename, detected_model)
+
         payload = ParsedDocument(
             manual_id=manual_id,
             filename=file.filename,
             content_type=file.content_type or "application/pdf",
             element_count=len(elements),
             elements=elements,
+            equipment_model=detected_model,
         ).model_dump()
 
         json_path = save_parsed_json(manual_id, payload)
@@ -172,6 +230,8 @@ async def upload_manual(file: UploadFile = File(...), _user: str = Depends(requi
             content={
                 "manual_id": manual_id,
                 "filename": file.filename,
+                "equipment_model": detected_model,
+                "manual_type": detected_type,
                 "saved_pdf": str(saved_path),
                 "saved_json": str(json_path),
                 "element_count": len(elements),
@@ -216,12 +276,23 @@ def chunk_manual(req: ChunkRequest, _user: str = Depends(require_auth)):
 def index_manual(req: IndexRequest, _user: str = Depends(require_auth)):
     try:
         print(f"Indexing chunked file: {req.chunked_file_path}")
-        doc_count = index_chunks(req.chunked_file_path, collection_name=req.collection_name)
-        print(f"Indexed {doc_count} documents into collection: {req.collection_name}")
+
+        # Resolve collection: explicit > manual_type mapping > filename detection > legacy default
+        if req.collection_name:
+            collection = req.collection_name
+            manual_type = req.manual_type or ("parts" if collection == "parts_manuals" else "maintenance")
+        else:
+            filename = Path(req.chunked_file_path).stem  # e.g. "sebp6451_chunks"
+            manual_type = req.manual_type or _detect_manual_type(filename)
+            collection = COLLECTION_MAP.get(manual_type, "maintenance_manuals")
+
+        doc_count = index_chunks(req.chunked_file_path, collection_name=collection)
+        print(f"Indexed {doc_count} documents into collection: {collection} (type={manual_type})")
 
         return {
             "chunked_file": req.chunked_file_path,
-            "collection_name": req.collection_name,
+            "collection_name": collection,
+            "manual_type": manual_type,
             "indexed_count": doc_count,
         }
 
@@ -238,6 +309,9 @@ def query_manuals(req: QueryRequest):
     try:
         print(f"Query received: {req.question}")
 
+        query_type = classify_query(req.question)
+        collections = [req.collection_name] if req.collection_name else collection_for_type(query_type)
+
         results = retrieve_chunks(
             query=req.question,
             collection_name=req.collection_name,
@@ -247,7 +321,8 @@ def query_manuals(req: QueryRequest):
 
         return {
             "question": req.question,
-            "collection_name": req.collection_name,
+            "query_type": query_type,
+            "collections_searched": collections,
             "result_count": len(results),
             "results": results,
         }
@@ -260,10 +335,12 @@ def query_manuals(req: QueryRequest):
 
 class AskAdvancedRequest(BaseModel):
     question: str
-    collection_name: str = "engineering_manuals"
-    k: int = 8
+    collection_name: str | None = None  # auto-routed by query classifier if omitted
+    k: int = 6
     model: str = "gpt-4.1-mini"
     rewrite_model: str = "gpt-4.1-mini"
+    response_mode: str = "standard"
+    include_contexts: bool = False
     filters: dict | None = None
 
 
@@ -272,6 +349,9 @@ def ask_manuals_advanced(req: AskAdvancedRequest):
     """Phase 9: query rewriting + cross-encoder reranking before answer generation."""
     try:
         print(f"Advanced ask received: {req.question}")
+
+        query_type = classify_query(req.question)
+        collections = [req.collection_name] if req.collection_name else collection_for_type(query_type)
 
         retrieved = retrieve_chunks_advanced(
             query=req.question,
@@ -285,11 +365,14 @@ def ask_manuals_advanced(req: AskAdvancedRequest):
             question=req.question,
             retrieved_chunks=retrieved,
             model=req.model,
+            max_chunks=min(5, len(retrieved)),
+            response_mode=req.response_mode,
         )
 
-        return {
+        response = {
             "question": req.question,
-            "collection_name": req.collection_name,
+            "query_type": query_type,
+            "collections_searched": collections,
             "result_count": len(retrieved),
             "answer": rag_result["answer"],
             "sources": [
@@ -299,19 +382,75 @@ def ask_manuals_advanced(req: AskAdvancedRequest):
                     "page_start": r["metadata"].get("page_start"),
                     "page_end": r["metadata"].get("page_end"),
                 }
-                for r in retrieved
+                for r in rag_result["used_chunks"]
             ],
         }
+        if req.include_contexts:
+            # Return all retrieved chunks for eval (recall/precision need full k=8 pool).
+            # "used_chunks" (top-5) are what the LLM saw; "contexts" covers the full
+            # retrieval so RAGAS context_recall is measured against the whole retrieved set.
+            response["contexts"] = retrieved
+        return response
 
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Advanced ask failed: {str(e)}")
 
 
+class FeedbackRequest(BaseModel):
+    question: str
+    answer: str
+    rating: str          # "positive" | "negative"
+    comment: str = ""
+    sources: list = []
+
+
+@app.post("/feedback")
+def submit_feedback(req: FeedbackRequest):
+    if req.rating not in ("positive", "negative"):
+        raise HTTPException(status_code=400, detail="rating must be 'positive' or 'negative'")
+    entry = {
+        "id": str(uuid.uuid4()),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "question": req.question,
+        "answer": req.answer,
+        "rating": req.rating,
+        "comment": req.comment,
+        "sources": req.sources,
+    }
+    FEEDBACK_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(FEEDBACK_FILE, "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry) + "\n")
+    return {"status": "saved", "id": entry["id"]}
+
+
+@app.get("/feedback")
+def get_feedback():
+    if not FEEDBACK_FILE.exists():
+        return {"feedback": [], "count": 0}
+    entries = []
+    with open(FEEDBACK_FILE, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                entries.append(json.loads(line))
+    positive = sum(1 for e in entries if e["rating"] == "positive")
+    negative = sum(1 for e in entries if e["rating"] == "negative")
+    return {
+        "count": len(entries),
+        "positive": positive,
+        "negative": negative,
+        "feedback": entries,
+    }
+
+
 @app.post("/ask")
 def ask_manuals(req: AskRequest):
     try:
         print(f"Ask request received: {req.question}")
+
+        query_type = classify_query(req.question)
+        collections = [req.collection_name] if req.collection_name else collection_for_type(query_type)
 
         retrieved = retrieve_chunks(
             query=req.question,
@@ -324,11 +463,14 @@ def ask_manuals(req: AskRequest):
             question=req.question,
             retrieved_chunks=retrieved,
             model=req.model,
+            max_chunks=min(5, len(retrieved)),
+            response_mode=req.response_mode,
         )
 
-        return {
+        response = {
             "question": req.question,
-            "collection_name": req.collection_name,
+            "query_type": query_type,
+            "collections_searched": collections,
             "result_count": len(retrieved),
             "answer": rag_result["answer"],
             "sources": [
@@ -338,9 +480,12 @@ def ask_manuals(req: AskRequest):
                     "page_start": r["metadata"].get("page_start"),
                     "page_end": r["metadata"].get("page_end"),
                 }
-                for r in retrieved
+                for r in rag_result["used_chunks"]
             ],
         }
+        if req.include_contexts:
+            response["contexts"] = rag_result["used_chunks"]
+        return response
 
     except Exception as e:
         print("FULL ERROR TRACEBACK:")

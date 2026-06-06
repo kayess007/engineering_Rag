@@ -3,6 +3,8 @@ import re
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+_PART_NUM_RE = re.compile(r'\b\d{3}-\d{4}\b')
+
 from app.vectordb import get_vectorstore
 
 CHUNKED_DIR = Path("storage/chunked")
@@ -116,6 +118,7 @@ def chunk_to_result(chunk: Dict) -> Dict:
         "text": chunk.get("text", "").strip(),
         "metadata": {
             "chunk_id": chunk.get("chunk_id"),
+            "parent_id": chunk.get("parent_id"),   # required for resolve_to_parent()
             "manual_id": chunk.get("manual_id"),
             "section_title": chunk.get("section_title"),
             "content_type": chunk.get("content_type"),
@@ -179,10 +182,29 @@ def score_result(query: str, item: Dict) -> float:
     if len(text.strip()) > 120:
         score += 2.0
 
-    # Table boost for spec-style queries
-    spec_terms = {"specification", "spec", "torque", "interval", "class", "ppm", "iso"}
+    # Table boost for spec-style queries and part-lookup queries
+    spec_terms = {"specification", "spec", "torque", "interval", "class", "ppm", "iso",
+                  "part", "number", "serial", "item", "quantity", "plug", "filter", "kit"}
     if query_tokens.intersection(spec_terms) and content_type == "table":
         score += 4.0
+
+    # Lookup mode: query contains a direct part number OR asks "part number" OR is a
+    # short component-name query (≤7 tokens) that mentions equipment/component terms.
+    _LOOKUP_COMPONENT_TERMS = {
+        "plug", "filter", "seal", "bearing", "belt", "hose", "gasket",
+        "valve", "pump", "sensor", "relay", "fuse", "alternator", "starter",
+        "injector", "nozzle", "ring", "piston", "kit", "bolt", "nut",
+    }
+    is_lookup = (
+        bool(_PART_NUM_RE.search(query))                          # "295-3099"
+        or ("part" in query_tokens and "number" in query_tokens)  # "part number"
+        or (                                                        # "spark plug c13"
+            len(query_tokens) <= 7
+            and query_tokens.intersection(_LOOKUP_COMPONENT_TERMS)
+        )
+    )
+    if is_lookup and _PART_NUM_RE.search(text):
+        score += 10.0
 
     return score
 
@@ -286,27 +308,64 @@ def vector_search(
     from app.vectordb import build_chroma_filter
     vectorstore = get_vectorstore(collection_name)
     where = build_chroma_filter(filters) if filters else None
+    fetch_k = max(k * 3, 15)
 
-    kwargs = {"k": max(k * 4, 20)}
     if where:
-        kwargs["filter"] = where
+        # ChromaDB bug: get(where=..., include=["embeddings"]) and
+        # query(where=...) both fail with "Error finding id".
+        # Workaround: two-step — get IDs via filter, fetch embeddings by IDs.
+        from app.embeddings import get_embedding_model as _get_emb
+        import numpy as np
 
-    docs_and_scores = vectorstore.similarity_search_with_score(query, **kwargs)
+        embedding_model = _get_emb()
+        query_embedding = np.array(embedding_model.embed_query(query))
 
+        # Step 1: get matching IDs + docs + metadata (no embeddings)
+        id_result = vectorstore._collection.get(
+            where=where,
+            limit=5000,
+            include=["documents", "metadatas"],
+        )
+        matching_ids = id_result.get("ids", [])
+        if not matching_ids:
+            return []
+
+        # Step 2: fetch embeddings by IDs (no filter — avoids the bug)
+        emb_result = vectorstore._collection.get(
+            ids=matching_ids,
+            include=["embeddings", "documents", "metadatas"],
+        )
+
+        results = []
+        for text, metadata, emb in zip(
+            emb_result["documents"], emb_result["metadatas"], emb_result["embeddings"]
+        ):
+            if not text or not text.strip():
+                continue
+            chunk_emb = np.array(emb)
+            similarity = float(np.dot(query_embedding, chunk_emb))
+            results.append({
+                "text": text,
+                "metadata": metadata,
+                "_vector_similarity": max(0.0, similarity),
+            })
+
+        results.sort(key=lambda x: x["_vector_similarity"], reverse=True)
+        return results[:fetch_k]
+
+    # No filter — use LangChain wrapper as normal
+    docs_and_scores = vectorstore.similarity_search_with_score(query, k=fetch_k)
     results = []
     for doc, distance in docs_and_scores:
         text = doc.page_content.strip()
         if not text:
             continue
         similarity = max(0.0, 1.0 - distance / 2.0)
-        results.append(
-            {
-                "text": text,
-                "metadata": doc.metadata,
-                "_vector_similarity": similarity,
-            }
-        )
-
+        results.append({
+            "text": text,
+            "metadata": doc.metadata,
+            "_vector_similarity": similarity,
+        })
     return results
 
 
@@ -335,75 +394,258 @@ def deduplicate_results(results: List[Dict], max_results: int) -> List[Dict]:
 
 def retrieve_chunks_advanced(
     query: str,
-    collection_name: str,
-    k: int = 8,
+    collection_name: str | None = None,
+    k: int = 5,
     rewrite_model: str = "gpt-4.1-mini",
     filters: dict | None = None,
 ) -> List[Dict]:
     """
     Phase 9 enhanced retrieval:
-      1. Rewrite query into multiple variants
-      2. Run hybrid retrieval for each variant (wider net)
-      3. Merge + deduplicate candidates
-      4. Cross-encoder rerank → return top-k
+      1. Classify query → route to correct collection(s)
+      2. Rewrite query into multiple variants
+      3. Run hybrid retrieval for each variant (wider net)
+      4. Merge + deduplicate candidates
+      5. Cross-encoder rerank → return top-k
     """
+    from app.query_classifier import classify_query, collection_for_type
     from app.query_rewriter import rewrite_query
     from app.reranker import rerank
 
-    queries = rewrite_query(query, model=rewrite_model)
+    query_type = classify_query(query)
+
+    # Resolve collection(s)
+    if collection_name is not None:
+        collections = [collection_name]
+    else:
+        collections = collection_for_type(query_type)
+        print(f"[advanced] Query type: {query_type} → collections: {collections}")
+
+    query_tokens = set(tokenize(query))
+    spec_terms = {
+        "torque", "viscosity", "cleanliness", "class", "standard", "standards",
+        "iso", "ppm", "interval", "capacity", "temperature", "recommended",
+        "spec", "specification",
+    }
+    if query_type == "parts":
+        max_variants = 3
+    elif query_tokens.intersection(spec_terms):
+        max_variants = 1
+    else:
+        max_variants = 2
+
+    queries = rewrite_query(query, model=rewrite_model, max_variants=max_variants)
     print(f"[advanced] Query variants: {queries}")
 
-    # Collect candidates from all query variants (larger pool)
+    # Collect candidates from all query variants across all collections
     candidate_pool: List[Dict] = []
-    fetch_k = max(k * 4, 20)
+    fetch_k = max(k * 3, 15)
 
-    for q in queries:
-        vec = vector_search(q, collection_name=collection_name, k=fetch_k, filters=filters)
-        vec = [resolve_to_parent(r) for r in vec]
-        kw = keyword_search(q, k=fetch_k, filters=filters)
-        merged = vec + kw
-        ranked = sorted(merged, key=lambda item: score_result(q, item), reverse=True)
-        candidate_pool.extend(ranked[:fetch_k])
+    for coll in collections:
+        for q in queries:
+            vec = vector_search(q, collection_name=coll, k=fetch_k, filters=filters)
+            vec = [resolve_to_parent(r) for r in vec]
+            kw = keyword_search(q, k=fetch_k, filters=filters)
+            merged = vec + kw
+            ranked = sorted(merged, key=lambda item: score_result(q, item), reverse=True)
+            candidate_pool.extend(ranked[:fetch_k])
 
-    # Deduplicate across all variants
-    deduped = deduplicate_results(candidate_pool, max_results=min(len(candidate_pool), k * 8))
+    # Deduplicate across all variants and collections
+    deduped = deduplicate_results(candidate_pool, max_results=min(len(candidate_pool), k * 3))
 
     # Strip internal scoring key before passing to cross-encoder
     for item in deduped:
         item.pop("_vector_similarity", None)
 
+    # Enrich table chunk text with section title so cross-encoder has context
+    for item in deduped:
+        if item.get("metadata", {}).get("content_type") == "table":
+            section = item.get("metadata", {}).get("section_title", "")
+            text = item.get("text", "")
+            if section and section.lower() not in text.lower():
+                item["text"] = f"{section}\n{text}"
+
     # Cross-encoder rerank using original query
-    reranked = rerank(query, deduped, top_k=k)
+    reranked = rerank(query, deduped, top_k=k, min_score=1.5)
     return reranked
 
 
 def retrieve_chunks(
     query: str,
-    collection_name: str,
-    k: int = 10,
+    collection_name: str | None = None,
+    k: int = 5,
     filters: dict | None = None,
 ) -> List[Dict]:
+    from app.query_classifier import classify_query, collection_for_type
+    from app.reranker import rerank
+
+    # Classify query to determine retrieval strategy and collection(s)
+    query_type = classify_query(query)
+    is_lookup = query_type == "parts"
+
+    # Resolve collection(s): explicit arg overrides classifier
+    if collection_name is not None:
+        collections = [collection_name]
+    else:
+        collections = collection_for_type(query_type)
+        print(f"[retriever] Query type: {query_type} → collections: {collections}")
+
+    # For multi-collection ("both"), run retrieval on each and merge before reranking
+    if len(collections) > 1:
+        all_candidates: List[Dict] = []
+        for coll in collections:
+            all_candidates.extend(
+                _retrieve_single_collection(query, coll, k, filters, is_lookup=False)
+            )
+        deduped = deduplicate_results(
+            sorted(all_candidates, key=lambda item: score_result(query, item), reverse=True),
+            max_results=k * 3,
+        )
+        for item in deduped:
+            item.pop("_vector_similarity", None)
+            item.pop("_bm25_score", None)
+        return rerank(query, deduped, top_k=k, min_score=1.5)
+
+    return _retrieve_single_collection(query, collections[0], k, filters, is_lookup=is_lookup)
+
+
+def _retrieve_single_collection(
+    query: str,
+    collection_name: str,
+    k: int,
+    filters: dict | None,
+    is_lookup: bool,
+) -> List[Dict]:
+    from app.reranker import rerank
+    query_toks = set(tokenize(query))
+
     # 1. Semantic retrieval (child chunks — small, precise)
     vector_results = vector_search(query, collection_name=collection_name, k=k, filters=filters)
 
     # 2. Resolve child chunks → parent chunks for full context
     vector_results = [resolve_to_parent(r) for r in vector_results]
 
-    # 3. BM25 keyword retrieval with same filters
-    keyword_results = keyword_search(query, k=max(k * 3, 15), filters=filters)
+    # 3. BM25 keyword retrieval — wider pool for lookup queries so part-number chunks
+    #    buried deep in BM25 ranking still make it into the candidate pool.
+    bm25_k = max(k * 4, 24) if is_lookup else max(k * 2, 10)
+    keyword_results = keyword_search(query, k=bm25_k, filters=filters)
 
-    # 4. Merge and rerank with unified scoring
+    # 4. Merge and score with unified scoring (score_result gives +10 to part-number chunks)
     merged = vector_results + keyword_results
-    ranked = sorted(
-        merged,
-        key=lambda item: score_result(query, item),
-        reverse=True,
-    )
+    ranked = sorted(merged, key=lambda item: score_result(query, item), reverse=True)
 
-    # 5. Deduplicate and strip internal scoring keys
-    final = deduplicate_results(ranked, max_results=k)
-    for item in final:
+    # 5. Deduplicate — keep a wider candidate pool for cross-encoder
+    candidates = deduplicate_results(ranked, max_results=k * 3)
+    for item in candidates:
         item.pop("_vector_similarity", None)
         item.pop("_bm25_score", None)
+
+    # Enrich table chunk text with section title so cross-encoder has context
+    for item in candidates:
+        if item.get("metadata", {}).get("content_type") == "table":
+            section = item.get("metadata", {}).get("section_title", "")
+            text = item.get("text", "")
+            if section and section.lower() not in text.lower():
+                item["text"] = f"{section}\n{text}"
+
+    # 6. Cross-encoder rerank → precise top-k (improves context precision)
+    final = rerank(query, candidates, top_k=k, min_score=1.5)
+
+    # 7. Part-number fallback: if this is a lookup query but no chunk that contains BOTH
+    #    a part number AND the distinctive query terms survived reranking, scan the full
+    #    merged pool and inject the best matching chunk.
+    #
+    #    "Distinctive" = query tokens that are NOT generic component/stop words.
+    #    Example: "what is the spark plug for c13"
+    #      → generic: plug, for, what, is, the, c13
+    #      → distinctive: {"spark"}
+    #    A "PLUG GP-WATER LINES" chunk passes part_num but NOT "spark" → fallback triggers.
+    if is_lookup:
+        _LOOKUP_COMPONENTS = {
+            "plug", "filter", "seal", "bearing", "belt", "hose", "gasket",
+            "valve", "pump", "sensor", "relay", "fuse", "alternator", "starter",
+            "injector", "nozzle", "ring", "piston", "kit", "bolt", "nut",
+        }
+        _STOP = {"what","is","the","a","an","for","of","in","to","how","does","do","which",
+                 "are","give","me","find","show","list","type","model","use","used","does"}
+        _MODELS = {"c13","c9","c7","c15","c18","c12","c3","cat","caterpillar","3406"}
+        generic = _LOOKUP_COMPONENTS | _STOP | _MODELS
+        distinctive = query_toks - generic   # e.g. {"spark"} for "spark plug c13"
+
+        def _relevant(text: str) -> bool:
+            """
+            Chunk must contain a part number co-located with the distinctive query
+            terms. Two format-aware checks:
+
+            1. Figure-legend format ("1=295-3099, ..., 1=SPARK PLUG"):
+               both "1=<part_num>" and "1=<distinctive_tok>" exist in the same text.
+
+            2. Table-row or prose: part number and distinctive token appear on the
+               same line, or within 60 chars of each other.
+            """
+            if not _PART_NUM_RE.search(text):
+                return False
+            if not distinctive:
+                return True
+            t = text.lower()
+            if not all(tok in t for tok in distinctive):
+                return False  # fast exit
+
+            # Check 1: figure-legend format ("1=295-3099 … 1=spark plug")
+            if re.search(r"1=\d{3}-\d{4}", t):
+                for tok in distinctive:
+                    if re.search(r"1=" + re.escape(tok), t):
+                        return True  # same item-group in figure legend
+
+            # Check 2: same-line (parts table rows, structured prose)
+            for line in t.splitlines():
+                if _PART_NUM_RE.search(line) and all(tok in line for tok in distinctive):
+                    return True
+
+            # Check 3: close proximity (within 60 chars)
+            for m in _PART_NUM_RE.finditer(t):
+                window = t[max(0, m.start() - 10): m.end() + 60]
+                if all(tok in window for tok in distinctive):
+                    return True
+
+            return False
+
+        has_relevant = any(_relevant(r.get("text", "")) for r in final)
+        if not has_relevant:
+            all_pool = vector_results + keyword_results
+            # Table row pattern: [item] [optional graphic ref] [part_num] [qty] [name...]
+            _TABLE_ROW_RE = re.compile(
+                r"^\s*\d+\s+(?:\d+\s+)?(\d{3}-\d{4})\s+\d+\s+(.+)$"
+            )
+
+            def _fallback_score(c: Dict) -> tuple:
+                text = c.get("text", "")
+                # Prefer genuine table-row format (part_num directly adjacent to name)
+                # over figure-legend format where they can be 100+ chars apart.
+                table_row_match = any(
+                    (m := _TABLE_ROW_RE.match(line))
+                    and all(tok in m.group(2).lower() for tok in distinctive)
+                    for line in text.splitlines()
+                )
+                return (1 if table_row_match else 0, score_result(query, c))
+
+            part_pool = [c for c in all_pool if _relevant(c.get("text", ""))]
+
+            # If no table-row format found in the BM25/vector pool, scan raw chunk JSONs
+            # directly — table children with noisy header tokens often rank too low for BM25.
+            if not any(_fallback_score(c)[0] for c in part_pool):
+                raw_chunks = load_all_chunk_files()
+                for chunk in raw_chunks:
+                    if chunk.get("chunk_type") != "child":
+                        continue
+                    text = chunk.get("text", "")
+                    if _relevant(text) and _fallback_score(chunk_to_result(chunk))[0]:
+                        resolved = resolve_to_parent(chunk_to_result(chunk))
+                        part_pool.insert(0, resolved)  # table rows take priority
+                        break  # one is enough
+
+            part_pool.sort(key=_fallback_score, reverse=True)
+            if part_pool:
+                inject = deduplicate_results(part_pool, max_results=2)
+                final = inject + final[:k - len(inject)]
 
     return final

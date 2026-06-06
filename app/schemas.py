@@ -19,3 +19,4 @@ class ParsedDocument(BaseModel):
     content_type: str
     element_count: int
     elements: List[ParsedElement]
+    equipment_model: Optional[str] = None  # e.g. "C13", "DI450", "DI560"

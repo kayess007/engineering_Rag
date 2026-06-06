@@ -7,6 +7,13 @@ app/.env
 .claude/
 .vscode/
 
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
 # Storage and generated data
 storage/
 evaluation/results/

@@ -1,3 +1,4 @@
+import hashlib
 import json
 from pathlib import Path
 from typing import Any, Dict, List
@@ -16,11 +17,12 @@ def load_chunked_json(chunked_file_path: str) -> List[Dict[str, Any]]:
 
 
 def chunk_to_document(chunk: Dict[str, Any]) -> Document:
-    metadata = {
+    raw_metadata = {
         "chunk_id": chunk.get("chunk_id"),
         "chunk_type": chunk.get("chunk_type", "parent"),
         "parent_id": chunk.get("parent_id"),
         "manual_id": chunk.get("manual_id"),
+        "equipment_model": chunk.get("equipment_model") or chunk.get("metadata", {}).get("equipment_model"),
         "section_title": chunk.get("section_title"),
         "content_type": chunk.get("content_type"),
         "page_start": chunk.get("page_start"),
@@ -29,6 +31,8 @@ def chunk_to_document(chunk: Dict[str, Any]) -> Document:
         "parent_section": chunk.get("metadata", {}).get("parent_section"),
         "table_title": chunk.get("metadata", {}).get("table_title"),
     }
+    # ChromaDB crashes on None metadata values when filtering — replace with ""
+    metadata = {k: (v if v is not None else "") for k, v in raw_metadata.items()}
     return Document(
         page_content=chunk.get("text", ""),
         metadata=metadata,
@@ -72,6 +76,22 @@ def index_chunks(
             raise ValueError(
                 f"Manual '{manual_id}' is already indexed in collection '{collection_name}'."
             )
+
+    # Near-duplicate guard: skip child chunks whose normalised text hashes to one
+    # already seen in this indexing batch (catches identical TOC/index rows that
+    # appear across multiple volumes of the same manual series).
+    seen_hashes: set[str] = set()
+    deduped: list[Document] = []
+    for doc in documents:
+        normalised = " ".join(doc.page_content.lower().split())
+        h = hashlib.sha256(normalised.encode()).hexdigest()
+        if h not in seen_hashes:
+            seen_hashes.add(h)
+            deduped.append(doc)
+    removed = len(documents) - len(deduped)
+    if removed:
+        print(f"Near-duplicate dedup: removed {removed} identical chunks ({len(deduped)} remain)")
+    documents = deduped
 
     print(f"Prepared {len(documents)} documents for embedding")
 
